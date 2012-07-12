@@ -1,0 +1,6 @@
+=== 0.0.1 / 2012-07-12
+
+* 1 major enhancement
+
+  * Switch to hoe and to github
+
