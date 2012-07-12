@@ -15,9 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-class Jirarest2
 VERSION = "1.0.0"
-end
 
 require_relative "connect"
 require_relative "issue"
