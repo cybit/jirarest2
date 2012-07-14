@@ -15,18 +15,28 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
+=begin
+ Keep all the Exceptions in their own module
+=end
 module Jirarest2
   ## connections.rb
+  # Authentification failed 
   class AuthentificationError < StandardError ; end
+  # Authentification failed and JIRA(tm) requires a login with captcha to continue
   class AuthentificationCaptchaError < StandardError ; end
   ## credentials.rb
+  # String given as an URI isn't one
   class NotAnURLError < ArgumentError ; end
   ## issue.rb
+  # Project does not exist in the given JIRA(tm) instance
   class  WrongProjectException < ArgumentError; end
+  # Issue type does not exist in the given project
   class WrongIssuetypeException < ArgumentError; end
+  # There is no field with this name for the given issue type
   class WrongFieldnameException < ArgumentError; end
+  # value is not allowed for this type of fields
   class ValueNotAllowedException < ArgumentError; end
+  # A field that is defined as "required" has not been given a value
   class RequiredFieldNotSetException < ArgumentError; end
 
 end

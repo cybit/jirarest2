@@ -22,16 +22,14 @@ require 'exceptions'
 require "pp"
 
 
-# TODO: These are now someplace else
-class AuthentificationError < StandardError
-end
-class AuthentificationCaptchaError < StandardError
-end
-
-
+=begin
+ An Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a parsed JSON Object as Hash or an exception if something went wrong.
+=end
 class Connect
   
-
+=begin
+ Create an instance of Connect. It needs an Credentials object to be created.
+=end
   def initialize(credentials)
     @pass = credentials.password
     @user = credentials.username
@@ -41,9 +39,9 @@ class Connect
   
 =begin
  Execute the request
- : operation = one of Get, Post, Delete, Put
- : uritail = the last part of the REST URI
- : data = data to be sent.
+ * operation = one of Get, Post, Delete, Put
+ * uritail = the last part of the REST URI
+ * data = data to be sent.
 =end
   def execute(operation,uritail,data)
     uri = nil

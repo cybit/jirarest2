@@ -15,7 +15,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
+=begin
+ Module to handle configuration files
+=end
 module Config
 =begin
  Inspired by http://www.erickcantwell.com/2011/01/simple-configuration-file-reading-with-ruby/

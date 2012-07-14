@@ -18,13 +18,17 @@
 
 require "uri"
 
+=begin
+ A Credentials object contains the data required to connect to a JIRA(tm) instance.
+=end
 class Credentials
 
 attr_accessor :username, :password
 attr_reader :connecturl
 
 =begin
-  Get the data for the credentials at creation time
+  Create an instance of Credentials. 
+  Requires username, password and the url for the JIRA(tm) instance. (The URL should stop after the port. There is no guarantee it would work if there is any path component given.) 
 =end
   def initialize(url,username,password)
     @username = username
@@ -36,7 +40,12 @@ attr_reader :connecturl
       raise Jirarest2::NotAnURLError
     end
   end
-  
+
+=begin
+ Setter for the URL.
+
+ Throws an Jirarest2::NotAnURLError if the given String is not an URI.
+=end  
   def connecturl=(url)
     uri = URI(url)
     if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
