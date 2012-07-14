@@ -9,13 +9,13 @@ class TestConnect < MiniTest::Unit::TestCase
   end
   
 
-  def test_get_get_reponse
-    assert "projects", @con.get_response("createmeta","")["expand"]
+  def test_executeGET
+    assert "projects", @con.execute("Get","issue/createmeta/","")["expand"]
   end
   
-  def test_post_connection
+  def test_executePOST
     query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
-    assert 4, @con.get_response("search",query)["maxResults"]
+    assert 4, @con.execute("Post","search/",query)["maxResults"]
   end
   
 end

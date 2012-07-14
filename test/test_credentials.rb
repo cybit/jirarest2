@@ -9,7 +9,7 @@ class TestCredentials < MiniTest::Unit::TestCase
   
   def testInitialize
     assert_instance_of(Credentials, Credentials.new("https://localhost:2990","username","password") )
-    assert_raises ( Jirarest2::NotAnURLError ) {
+    assert_raises(Jirarest2::NotAnURLError)  {
       Credentials.new("localhost:2990","username","password")
     }
     assert_equal "https://localhost:2990", @cred.connecturl
@@ -20,7 +20,7 @@ class TestCredentials < MiniTest::Unit::TestCase
   def testSetURL
     @credc.connecturl = "http://localhost:80"
     assert_equal "http://localhost:80", @credc.connecturl 
-    assert_raises ( Jirarest2::NotAnURLError ) {
+    assert_raises(Jirarest2::NotAnURLError) {
       @credc.connecturl = "localhost:80" 
     }
   end

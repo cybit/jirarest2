@@ -28,8 +28,8 @@ class Issue
   def initialize (project,type,credentials)
     connection = Connect.new(credentials)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
-    jhash = connection.get_response("createmeta",query)
-    parse_json ( jhash)
+    jhash = connection.execute("Get","issue/createmeta/",query)
+    parse_json(jhash)
     raise Jirarest2::WrongProjectException, project if @project == ""
     raise Jirarest2::WrongIssuetypeException, type if @issuetype == ""
   end
@@ -123,8 +123,8 @@ class Issue
 
 =begin
  return a hash that can be sent to jira
-#Lets create a new issue
-#query=
+Lets create a new issue
+query=
 {"fields"=>
   { "project"=>{"key"=>"MFTP"}, 
     "environment"=>"REST ye merry gentlemen.", 
@@ -132,8 +132,6 @@ class Issue
     "issuetype"=> {"name"=>"My own type"}
   }
 }
-#result = get_response("issue",query)
-#pp result
 =end
   public
   def jirahash
@@ -219,7 +217,7 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
     }
     connection = Connect.new(credentials)
     hash = jirahash
-    return connection.get_response("issue",hash)
+    return connection.execute("Post","issue/",hash)
   end
 
 

@@ -88,7 +88,7 @@ class ParseOptions
         scriptopts.username = u 
       end
       
-      opts.on("-h", "--jira-url URL", "URL to connect to jira in the browser") do |url|
+      opts.on("-H", "--jira-url URL", "URL to connect to jira in the browser") do |url|
         uri = URI(URL)
         scriptopts.url = uri.schme + "://" + uri.host + uri.port
       end

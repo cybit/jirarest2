@@ -38,123 +38,58 @@ class Connect
     @CONNECTURL = credentials.connecturl
   end
 
-  def do_request (req,uri)
-#    pp req.inspect
- #   pp uri
-    res = Net::HTTP.start(uri.host, uri.port) {|http|
-      http.request(req)
-    }
-    case res 
-    when Net::HTTPUnauthorized #No login-credentials oder wrong ones.
-      raise Jirarest2::AuthentificationError, res.body
-    when Net::HTTPForbidden #Captcha-Time
-      #      pp res.get_fields("x-authentication-denied-reason")
-      # Result: ["CAPTCHA_CHALLENGE; login-url=http://localhost:8080/login.jsp"]
-      res.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/
-      raise Jirarest2::AuthentificationCaptchaError, $1
-    end
-    return res
-  end
-
-  def get_post_response (type,data)
-    uri = nil
-    uri=URI(@CONNECTURL + type )
-
-    req = nil
-    req = Net::HTTP::Post.new(uri.request_uri)
-    req.basic_auth @user, @pass
-    req["Content-Type"] = "application/json;charset=UTF-8"
-    
-    if data != "" then
-      @payload = data.to_json
-      req.body = @payload
-    end
-    
-    result = do_request req, uri
-    return JSON.parse(result.body)
-  end
   
-  def get_get_response(type,data)
-    uri = URI(@CONNECTURL+type)
-    
-    if data != "" then
-      uri.query = URI.encode_www_form(data)
-    end
-    req = Net::HTTP::Get.new(uri.request_uri)
-    req.basic_auth @user, @pass
-    req["Content-Type"] = "application/json;charset=UTF-8"
-    
-    result = do_request req, uri
-    return JSON.parse(result.body)
-  end
-
 =begin
  Execute the request
  : operation = one of Get, Post, Delete, Put
  : uritail = the last part of the REST URI
  : data = data to be sent.
 =end
-def execute(operation,uritail,data)
-  uri = URI(@CONNECTURL+uritail)
-  
-  if data != "" then
-    if operation == "Post" then # POST carries the payload in the body
-      @payload = data.to_json
-      req.body = @payload
-    else
-      uri.query = URI.encode_www_form(data)
+  def execute(operation,uritail,data)
+    uri = nil
+    uri = URI(@CONNECTURL+uritail)
+    
+    if data != "" then
+      if operation != "Post" then # POST carries the payload in the body that's why we have to wait
+        uri.query = URI.encode_www_form(data)
+      end
     end
-  end
+    
+    req = nil
+    req = Net::HTTP::const_get(operation).new(uri.request_uri) # "Classes Are Just Obejects, Too" (Design Patterns in Ruby, Russ Olsen, Addison Wessley)
+    req.basic_auth @user, @pass
+    req["Content-Type"] = "application/json;charset=UTF-8"
 
-  req = Net::HTTP::const_get(operation).new(uri.request_uri) # "Classes Are Just Obejects, Too" (Design Patterns in Ruby, Russ Olsen, Addison Wessley)
-  req.basic_auth @user, @pass
-  req["Content-Type"] = "application/json;charset=UTF-8"
-  
-  result = do_request req, uri
-  return JSON.parse(result.body)
+    if data != "" then
+      if operation == "Post" then # POST carries the payload in the body
+        @payload = data.to_json
+        req.body = @payload
+      end
+    end
+    
+    # Ask the server
+    result = Net::HTTP.start(uri.host, uri.port) {|http|
+      http.request(req)
+    }
+    # deal with output
+    case result
+    when Net::HTTPUnauthorized #No login-credentials oder wrong ones.
+      raise Jirarest2::AuthentificationError, result.body
+    when Net::HTTPForbidden #Captcha-Time
+      #      pp res.get_fields("x-authentication-denied-reason")
+      # Result: ["CAPTCHA_CHALLENGE; login-url=http://localhost:8080/login.jsp"]
+      result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/
+      raise Jirarest2::AuthentificationCaptchaError, $1
+    end
+    
+    return JSON.parse(result.body)
+  end # execute
 
-end
 
-def get_response (type,data)
-  case type 
-  when "issue"
-    get_post_response("issue/",data)
-  when "search"
-    get_post_response("search/",data)
-  when "createmeta"
-    get_get_response("issue/createmeta",data)
-  end
- 
-end
-
-
-end
+end # class
 
 =begin
 
-##
-# get the meta info of an issue within a project
-def get_issue_meta (project, issuetype)
-  query = {:projectKeys => project , :issuetypeNames => issuetype, :expand => "projects.issuetypes.fields" }
-  result = get_response("createmeta",query)
-end
-
-##
-# :method: create_issue
-# project, issuetype : String
-# fields : Hash
-def create_issue ( project, issuetype, fields )
-  issuefields = get_issue ()
-  
-  #query={"fields"=>{"project"=>{"key"=>"MFTP"}, "environment"=>"REST ye merry gentlemen.", "My own text"=>"Creating of an issue using project keys and issue type names using the REST API", "issuetype"=>{"name"=>"My own type"}}}
-  #result = get_response("issue",query)
-  
-
-
-end
-
-# This would create a new issue if we'd give the right parameters
-#puts get_response("issue",'')
 
 # Add a Key-Value for every search parameter you'd usually have.
 query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
@@ -163,24 +98,4 @@ query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
 #result = get_response("search",query) 
 #pp result
 
-# And now we try to find the metadata
-#result = get_response("createmeta","")
-
-# Get the Metadata to a special Project and a special Type identified by name (ids would be available with other data)
-query = {:projectKeys => "MFTP" , :issuetypeNames => "My own type" }
-result = get_response("createmeta",query)
-#pp result 
-
-# Extend the above query to get all Data
-query = {:projectKeys => "MFTP" , :issuetypeNames => "My own type", :expand => "projects.issuetypes.fields" }
-result = get_response("createmeta",query)
-
-#pp result
-
-
-
-fields = get_issuefields result
-# pp fields
-requireds = get_requireds (fields)
-pp requireds
 =end
