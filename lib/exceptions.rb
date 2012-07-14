@@ -20,14 +20,19 @@
 =end
 module Jirarest2
   ## connections.rb
+
   # Authentification failed 
   class AuthentificationError < StandardError ; end
   # Authentification failed and JIRA(tm) requires a login with captcha to continue
   class AuthentificationCaptchaError < StandardError ; end
+
   ## credentials.rb
+
   # String given as an URI isn't one
   class NotAnURLError < ArgumentError ; end
+
   ## issue.rb
+
   # Project does not exist in the given JIRA(tm) instance
   class  WrongProjectException < ArgumentError; end
   # Issue type does not exist in the given project

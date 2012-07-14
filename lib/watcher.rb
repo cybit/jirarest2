@@ -32,16 +32,24 @@ class Watcher
   end
   
   
-
+=begin
+ Return all the watchers of the issue
+=end
   def get_watchers
     ret = @connection.execute("Get",@uritail,"")
   end
   
+=begin
+  Adds a new watcher for the issue
+=end
   def set_watcher(username)
     query = 
     ret = @connection.execute("Post",@uritail,query)
   end
 
+=begin
+  removes one watcher from the issue
+=end
   def remove_watcher(username)
     query = {"username" => username}
     ret = @connection.execute("Delete",@uritail,query)

@@ -15,15 +15,21 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+=begin
+ An Issue object contains all the data of an issue
+=end
 class Issue
-
+  
   require "connect"
-
-  attr_reader :issuetype, :project
+  
+  # issue type of the issue 
+  attr_reader :issuetype
+  # project the issue belongs to
+  attr_reader :project
   
 =begin
   New initialize method we take the project and the type we want to use and take login info that might exist just right with us
-  args is not required but first argument is password, second is username, third is connectionurl
+  project Name of the project this issue is to live in
 =end
   def initialize (project,type,credentials)
     connection = Connect.new(credentials)
@@ -154,6 +160,9 @@ query=
     return h
   end
 
+=begin
+ checks if the value is allowed for this field
+=end
   protected
   def value_allowed?(key,value)
     if @issuefields[key]["allowedValues"].include?(value) 
@@ -163,6 +172,12 @@ query=
       puts "Value #{value} not allowed for field #{key}."
     end
   end
+
+=begin
+ Special setter for fields that have a limited numer of allowed values.
+
+ This setter might be included in set_field at a later date.
+=end
   def set_allowed_value(key,value)
     if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
       array = Array.new

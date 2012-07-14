@@ -1,4 +1,6 @@
-# one requires should suffice 
+# Jirarest2 is a gem to connect to the REST interface of JIRA(tm) . It uses Basic authentification and not oauth
+
+
 #    Copyright (C) 2012 Cyril Bitterich
 #
 #    This program is free software: you can redistribute it and/or modify

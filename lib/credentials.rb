@@ -23,7 +23,11 @@ require "uri"
 =end
 class Credentials
 
-attr_accessor :username, :password
+# username to use
+attr_accessor :username
+# password for the connection
+attr_accessor :password
+# url to connect to the JIRA(tm) instance
 attr_reader :connecturl
 
 =begin

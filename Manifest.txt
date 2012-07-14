@@ -6,12 +6,15 @@ README.md
 README.txt
 Rakefile
 bin/create_issue.rb
+header.copyright
 lib/config.rb
 lib/connect.rb
 lib/credentials.rb
 lib/exceptions.rb
 lib/issue.rb
 lib/jirarest2.rb
+lib/watcher.rb
 test/test_connect.rb
 test/test_credentials.rb
 test/test_issue.rb
+test/test_watcher.rb
