@@ -88,6 +88,33 @@ class Connect
     return JSON.parse(result.body)
   end
 
+=begin
+ Execute the request
+ : operation = one of Get, Post, Delete, Put
+ : uritail = the last part of the REST URI
+ : data = data to be sent.
+=end
+def execute(operation,uritail,data)
+  uri = URI(@CONNECTURL+uritail)
+  
+  if data != "" then
+    if operation == "Post" then # POST carries the payload in the body
+      @payload = data.to_json
+      req.body = @payload
+    else
+      uri.query = URI.encode_www_form(data)
+    end
+  end
+
+  req = Net::HTTP::const_get(operation).new(uri.request_uri) # "Classes Are Just Obejects, Too" (Design Patterns in Ruby, Russ Olsen, Addison Wessley)
+  req.basic_auth @user, @pass
+  req["Content-Type"] = "application/json;charset=UTF-8"
+  
+  result = do_request req, uri
+  return JSON.parse(result.body)
+
+end
+
 def get_response (type,data)
   case type 
   when "issue"
