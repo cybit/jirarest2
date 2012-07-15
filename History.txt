@@ -1,3 +1,15 @@
+=== 0.0.3 / 2012-07-16
+
+* 2 major enhancements:
+
+  * Added support for linked issues
+  * Changed the delemiter for the "-c" (content) parameter of create_issue.rb from ":" to "=" to allow for Time fields
+
+* 1 minor enhancement:
+
+  * Moved watcher.rb in directory service (not sure if the superclass really makes sense so)
+
+
 === 0.0.2 / 2012-07-15
 
 * 3 major enhancements:
