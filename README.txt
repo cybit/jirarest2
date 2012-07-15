@@ -12,7 +12,7 @@ jirarest2 is yet another implementation of the JIRA(tm) REST api ( https://devel
 
 == FEATURES/PROBLEMS:
 
-Still in the very first alpha stages. You can only create new issues.
+Still in the very first alpha stages. You can only create new issues with watchers.
 
 == SYNOPSIS:
 
@@ -30,13 +30,6 @@ sudo gem install jirarest2
 == DEVELOPERS:
 
 Cyril Bitterich
-
-#After checking out the source, run:
-#
-#  $ rake newb
-#
-#This task will install any missing dependencies, run the tests/specs,
-#and generate the RDoc.
 
 == LICENSE:
 

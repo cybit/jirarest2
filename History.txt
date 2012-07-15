@@ -1,3 +1,22 @@
+=== 0.0.2 / 2012-07-15
+
+* 3 major enhancements:
+
+  * Added watchers to the mix. create_issue can work them now.
+  * Connect returns a Jirarest2::Result object now to keep the HTTP statuscodes
+  * Added the execute method that should get rid of get_post_response, get_get_response ...
+
+* 3 minor enhancements:
+
+  * More documentation
+  * cleanup
+  * refactored connect to make it easier for new classes
+
+
+* 1 bug fix:
+
+  * Return status codes now work as expected. (They are strings after all)
+
 === 0.0.1 / 2012-07-12
 
 * 1 major enhancement

@@ -13,8 +13,10 @@ lib/credentials.rb
 lib/exceptions.rb
 lib/issue.rb
 lib/jirarest2.rb
+lib/jirarest2/result.rb
 lib/watcher.rb
 test/test_connect.rb
 test/test_credentials.rb
 test/test_issue.rb
+test/test_result.rb
 test/test_watcher.rb
