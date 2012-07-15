@@ -17,14 +17,13 @@
 
 
 require 'net/http'
-#require 'json'
 require 'exceptions'
 require 'jirarest2/result'
 require "pp"
 
 
 =begin
- An Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a parsed JSON Object as Hash or an exception if something went wrong.
+ An Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a Jirarest2::Result object or an exception if something went wrong.
 =end
 class Connect
   
@@ -82,7 +81,6 @@ class Connect
     end
     
     return Jirarest2::Result.new(result)
-    # return JSON.parse(result.body)
   end # execute
 
 
