@@ -38,10 +38,12 @@ class Result
  Takes an Net::HTTPResponse object and builds itself from there
 =end
  def initialize(httpResponse)
+#   pp httpResponse
+#   pp httpResponse.body
    @code = httpResponse.code
    @header = httpResponse.to_hash
    @body = httpResponse.body
-   if httpResponse.instance_of?(Net::HTTPNoContent) then # If there is nothing in the body it would be hard to parse it.
+   if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" then # If there is nothing in the body it would be hard to parse it.
      @result = @body
    else
      @result = JSON.parse(@body)

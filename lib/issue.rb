@@ -15,7 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO always recreating Connection is not really DRY - FInd a way to fix it.
+# TODO always recreating Connection is not really DRY - Find a way to fix it.
 
 =begin
  An Issue object contains all the data of an issue

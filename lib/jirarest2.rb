@@ -17,10 +17,12 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 require_relative "connect"
 require_relative "issue"
 require_relative "credentials"
 require_relative "exceptions"
-require_relative "watcher"
+require_relative "services/watcher"
+require_relative "services"
+require_relative "services/issuelink"

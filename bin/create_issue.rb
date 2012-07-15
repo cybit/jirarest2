@@ -72,12 +72,16 @@ class ParseOptions
         scriptopts.show << "requireds"
       end
       
-      opts.on("-c", "--content x:value,y:value,z:value", Array, "List of fields to fill") do |list|
+      opts.on("-c", "--content x=value,y=value,z=value", Array, "List of fields to fill") do |list|
         issueopts.content = list
       end
       
       opts.on("-w", "--watcher USERNAME,USERNAME", Array, "List of watchers") do |w|
         issueopts.watchers = w
+      end
+      
+      opts.on("-l", "--link ISSUE=LINKTYPE", "Key of an Issue this issue should be linked to" ) do |l|
+        issueopts.link = l
       end
       
       opts.on("-F", "--field-seperator CHAR", "A fieldseperator if one of the fields is an array (Default \"|\")") do |fs|
@@ -199,7 +203,7 @@ def prepare_new_ticket
   issue = open_issue
   valueNotAllowedRaised = false
   @issueopts.content.each { |value|
-    split = value.split(":")
+    split = value.split("=")
     begin
       if issue.fieldtype(split[0]) == "array" then # If the fieldtype is an array we want to use our arrayseparator to split the fields
         if ! split[1].nil? then 
@@ -241,6 +245,12 @@ def create_new_ticket(issue)
     if ! watcherssuccess then
       puts "Watchers could not be set though."
     end
+    if @issueopts.link then
+      connection = Connect.new(get_credentials)
+      link = IssueLink.new(connection)
+      remoteIssue,linktype  = @issueopts.link.split("=")
+      linkresult = link.link(result["key"],remoteIssue,linktype)
+    end
     return 0
   elsif result["errors"] then
     puts "An error occured. The error message was: #{result["errors"].to_s}"
@@ -255,7 +265,6 @@ if @scriptopts.show != [] then
 end
 if ! @issueopts.content.nil? then # If the -c option is set. (-c and no content leads to another exception)
   content = prepare_new_ticket
-  pp @issueopts.watchers
   exit create_new_ticket(content)
 end
 

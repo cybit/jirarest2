@@ -3,7 +3,7 @@ require "connect"
 require "credentials"
 require "jirarest2/result"
 
-class TestConnect < MiniTest::Unit::TestCase
+class TestResult < MiniTest::Unit::TestCase
   def setup
     cred = Credentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)

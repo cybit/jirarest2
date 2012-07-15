@@ -2,7 +2,7 @@
 require "minitest/autorun"
 require "credentials"
 require "connect"
-require "watcher"
+require "services/watcher"
 
 class TestWatcher < MiniTest::Unit::TestCase
   def setup
