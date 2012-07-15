@@ -7,7 +7,8 @@
 jirarest2 is yet another implementation of the JIRA(tm) REST api ( https://developer.atlassian.com/display/JIRADEV/JIRA+Remote+API+Reference ). 
  It is intended to be called within the shell to create and verify JIRA(tm) issues fast without a browser.
  This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which required oauth authentification. 
- Use it at your own risk most of the API features are not implemented.
+
+ Use it at your own risk. Most of the API features are not implemented.
 
 
 == FEATURES/PROBLEMS:

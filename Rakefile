@@ -7,7 +7,7 @@ require 'hoe'
 # Hoe.plugin :cucumberfeatures
  Hoe.plugin :doofus
 # Hoe.plugin :gem_prelude_sucks
- Hoe.plugin :gemspec
+# Hoe.plugin :gemspec
  Hoe.plugin :git
 # Hoe.plugin :inline
 # Hoe.plugin :manifest
@@ -15,7 +15,7 @@ require 'hoe'
 # Hoe.plugin :racc
 # Hoe.plugin :rcov
 # Hoe.plugin :rubyforge
- Hoe.plugin :rubygems
+# Hoe.plugin :rubygems
 # Hoe.plugin :website
 
 Hoe.spec 'jirarest2' do
