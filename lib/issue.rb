@@ -34,7 +34,8 @@ class Issue
   def initialize (project,type,credentials)
     connection = Connect.new(credentials)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
-    jhash = connection.execute("Get","issue/createmeta/",query)
+    answer = connection.execute("Get","issue/createmeta/",query)
+    jhash = answer.result
     parse_json(jhash)
     raise Jirarest2::WrongProjectException, project if @project == ""
     raise Jirarest2::WrongIssuetypeException, type if @issuetype == ""
@@ -232,7 +233,8 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
     }
     connection = Connect.new(credentials)
     hash = jirahash
-    return connection.execute("Post","issue/",hash)
+    # TODO we changed the returning Value here - it's an Result object and no longer just the equivalent of Result.result
+    return connection.execute("Post","issue/",hash) 
   end
 
 

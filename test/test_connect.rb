@@ -10,12 +10,12 @@ class TestConnect < MiniTest::Unit::TestCase
   
 
   def test_executeGET
-    assert "projects", @con.execute("Get","issue/createmeta/","")["expand"]
+    assert "projects", @con.execute("Get","issue/createmeta/","").result["expand"]
   end
   
   def test_executePOST
     query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
-    assert 4, @con.execute("Post","search/",query)["maxResults"]
+    assert 4, @con.execute("Post","search/",query).result["maxResults"]
   end
   
 end

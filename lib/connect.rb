@@ -17,8 +17,9 @@
 
 
 require 'net/http'
-require 'json'
+#require 'json'
 require 'exceptions'
+require 'jirarest2/result'
 require "pp"
 
 
@@ -80,7 +81,8 @@ class Connect
       raise Jirarest2::AuthentificationCaptchaError, $1
     end
     
-    return JSON.parse(result.body)
+    return Jirarest2::Result.new(result)
+    # return JSON.parse(result.body)
   end # execute
 
 
