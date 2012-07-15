@@ -15,6 +15,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# TODO always recreating Connection is not really DRY - FInd a way to fix it.
+
 =begin
  An Issue object contains all the data of an issue
 =end
@@ -26,6 +28,8 @@ class Issue
   attr_reader :issuetype
   # project the issue belongs to
   attr_reader :project
+  # The issue numer if we got it somehow
+  attr_reader :issuekey
   
 =begin
   New initialize method we take the project and the type we want to use and take login info that might exist just right with us
@@ -234,10 +238,29 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
     connection = Connect.new(credentials)
     hash = jirahash
     # TODO we changed the returning Value here - it's an Result object and no longer just the equivalent of Result.result
-    return connection.execute("Post","issue/",hash) 
+    ret = connection.execute("Post","issue/",hash) 
+    if ret.code == "201" then # Ticket sucessfully created
+      @issuekey = ret.result["key"]
+    end
+    return ret
   end
 
 
-end
+=begin
+ Set the watchers for this Ticket
+ watchers has to be an Array
+=end
+  def add_watchers(credentials,watchers)
+    success = false # Return whether we were successful with the watchers
+    connection = Connect.new(credentials)
+    watch = Watcher.new(connection,@issuekey)
+    watchers.each { |person|
+      success = watch.add_watcher(person)
+    }
+    return success
+  end
+
+  
+end # class
 
 

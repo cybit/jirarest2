@@ -41,7 +41,11 @@ class Result
    @code = httpResponse.code
    @header = httpResponse.to_hash
    @body = httpResponse.body
-   @result = JSON.parse(@body)
+   if httpResponse.instance_of?(Net::HTTPNoContent) then # If there is nothing in the body it would be hard to parse it.
+     @result = @body
+   else
+     @result = JSON.parse(@body)
+   end
  end # initialize
 
 end # class

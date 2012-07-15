@@ -36,15 +36,25 @@ class Watcher
  Return all the watchers of the issue
 =end
   def get_watchers
-    ret = @connection.execute("Get",@uritail,"")
+    ret = @connection.execute("Get",@uritail,"").result
+    watchers = Array.new
+    ret["watchers"].each { |entry|
+      watchers << entry["name"]
+    }
+    return watchers
   end
   
 =begin
   Adds a new watcher for the issue
 =end
-  def set_watcher(username)
-    query = 
-    ret = @connection.execute("Post",@uritail,query)
+  def add_watcher(username)
+    ret = @connection.execute("Post",@uritail,username)
+    case ret.code
+    when "204"
+      return true
+    else
+      return false
+    end
   end
 
 =begin
@@ -53,6 +63,12 @@ class Watcher
   def remove_watcher(username)
     query = {"username" => username}
     ret = @connection.execute("Delete",@uritail,query)
+    case ret.code # Have to decide what to do here (Work with exceptions or with the case block)
+    when "204"
+      return true
+    else
+      false
+    end
   end
 
 end

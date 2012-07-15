@@ -76,9 +76,14 @@ class ParseOptions
         issueopts.content = list
       end
       
+      opts.on("-w", "--watcher USERNAME,USERNAME", Array, "List of watchers") do |w|
+        issueopts.watchers = w
+      end
+      
       opts.on("-F", "--field-seperator CHAR", "A fieldseperator if one of the fields is an array (Default \"|\")") do |fs|
         scriptopts.arrayseperator = fs
       end
+
       
       opts.on("--config-file CONFIGFILE", "Config file containing the jira credentials. (Default: ~/.jiraconfig)") do |conffile|
         scriptopts.configfile = conffile
@@ -153,7 +158,9 @@ def get_credentials
   return Credentials.new(@scriptopts.url, @scriptopts.username, @scriptopts.pass)
 end
 
-
+=begin
+ create the issue on our side
+=end
 def open_issue
   begin
     credentials = get_credentials
@@ -212,25 +219,33 @@ def prepare_new_ticket
     raise Jirarest2::ValueNotAllowedException
   end
   return issue
-  
-  # TODO create a real issue
+end
+
+def set_watchers(issue)
+  issue.set_watcher(credentials,@issueopts.watchers)
 end
 
 def create_new_ticket(issue)
   begin
-    result = issue.persist(get_credentials)
+    result = issue.persist(get_credentials).result
+    # Set the watchers
+    if @issueopts.watchers then
+      watcherssuccess = issue.add_watchers(get_credentials,@issueopts.watchers)
+    end
   rescue Jirarest2::RequiredFieldNotSetException => e
     puts "Required field \"#{e.to_s}\" not set."
     return 1
   end
   if result["key"] then
     puts "Created new issue with issue id #{result["key"]} ."
+    if ! watcherssuccess then
+      puts "Watchers could not be set though."
+    end
     return 0
   elsif result["errors"] then
     puts "An error occured. The error message was: #{result["errors"].to_s}"
     return 2
   end
-  
 end
 
 
@@ -240,6 +255,7 @@ if @scriptopts.show != [] then
 end
 if ! @issueopts.content.nil? then # If the -c option is set. (-c and no content leads to another exception)
   content = prepare_new_ticket
+  pp @issueopts.watchers
   exit create_new_ticket(content)
 end
 
