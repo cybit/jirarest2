@@ -5,18 +5,19 @@ require "jirarest2"
 class TestIssue < MiniTest::Unit::TestCase
   def setup
     @credentials = Credentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
-    @existentIssue = Issue.new("MFTP","My issue type",@credentials)
+    @connect = Connect.new(@credentials)
+    @existentIssue = Issue.new("MFTP","My issue type",@connect)
   end
 
   def testNonExistentProject
     assert_raises(Jirarest2::WrongProjectException) {
-      nonexistentProject = Issue.new("blubber","fasel",@credentials)
+      nonexistentProject = Issue.new("blubber","fasel",@connect)
     }
   end
   
   def testNonExistentIssuetype
     assert_raises(Jirarest2::WrongIssuetypeException) {
-      nonexistentIssue = Issue.new("MFTP","fasel",@credentials)
+      nonexistentIssue = Issue.new("MFTP","fasel",@connect)
     }
   end
   

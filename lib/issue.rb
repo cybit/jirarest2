@@ -15,14 +15,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# TODO always recreating Connection is not really DRY - Find a way to fix it.
-
 =begin
  An Issue object contains all the data of an issue
 =end
 class Issue
   
-  require "connect"
   
   # issue type of the issue 
   attr_reader :issuetype
@@ -32,11 +29,10 @@ class Issue
   attr_reader :issuekey
   
 =begin
-  New initialize method we take the project and the type we want to use and take login info that might exist just right with us
+  New initialize method we take the project and the type we want to use and a connection
   project Name of the project this issue is to live in
 =end
-  def initialize (project,type,credentials)
-    connection = Connect.new(credentials)
+  def initialize (project,type,connection)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
     answer = connection.execute("Get","issue/createmeta/",query)
     jhash = answer.result
@@ -229,15 +225,13 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
 =begin
  create a new ticket
 =end
-  def persist(credentials)
+  def persist(connection)
     get_requireds.each { |fieldname| 
       if @issuefields[fieldname]["value"].nil? then
         raise Jirarest2::RequiredFieldNotSetException, fieldname
       end
     }
-    connection = Connect.new(credentials)
     hash = jirahash
-    # TODO we changed the returning Value here - it's an Result object and no longer just the equivalent of Result.result
     ret = connection.execute("Post","issue/",hash) 
     if ret.code == "201" then # Ticket sucessfully created
       @issuekey = ret.result["key"]
@@ -250,9 +244,8 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
  Set the watchers for this Ticket
  watchers has to be an Array
 =end
-  def add_watchers(credentials,watchers)
+  def add_watchers(connection,watchers)
     success = false # Return whether we were successful with the watchers
-    connection = Connect.new(credentials)
     watch = Watcher.new(connection,@issuekey)
     watchers.each { |person|
       success = watch.add_watcher(person)
