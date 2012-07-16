@@ -78,13 +78,59 @@ class Connect
       # Result: ["CAPTCHA_CHALLENGE; login-url=http://localhost:8080/login.jsp"]
       result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/
       raise Jirarest2::AuthentificationCaptchaError, $1
+    when Net::HTTPNotFound
+      raise Jirarest2::NotFoundError, result
     end
     
     return Jirarest2::Result.new(result)
   end # execute
 
+=begin
+ Is the rest API really at the destination we think it is?
+=end
+  def check_uri
+    begin 
+      begin
+        ret = (execute("Get","dashboard","").code == "200")
+      rescue Jirarest2::NotFoundError
+        return false
+      end
+    end
+  end
 
+=begin
+ Try to be nice. Parse the URI and see if you can find a pattern to the problem
+=end
+  def heal_uri(url = @CONNECTURL)
+    splitURI = URI.split(url) # [Scheme,Userinfo,Host,Port,Registry,Path,Opaque,Query,Fragment]
+    splitURI[5].gsub!(/^(.*)2$/,'\12/')
+    splitURI[5].gsub!(/\/+/,'/') # get rid of duplicate /
+    splitURI[5].gsub!(/(rest\/api\/2\/)+/,'\1') # duplicate path to rest
+    splitURI[5].gsub!(/^(.*)\/login.jsp(\/rest\/api\/2\/)$/,'\1\2') # dedicated login page
+    splitURI[5].gsub!(/^(.*)\/secure\/Dashboard.jspa(\/rest\/api\/2\/)$/,'\1\2') # copied the dashboard URL (or the login Page)
+    if splitURI[3] then
+      url = splitURI[0].to_s + "://" + splitURI[2].to_s + ":" + splitURI[3].to_s + splitURI[5].to_s
+    else
+      url = splitURI[0].to_s + "://" + splitURI[2].to_s + splitURI[5].to_s
+    end
+    return url
+  end
 end # class
+
+=begin
+ try to fix the connecteurl of this instance 
+=end
+public
+ def heal_uri!
+   if ! check_uri then
+     @CONNECTURL = heal_uri(@CONNECTURL)
+   end
+   if check_uri then
+     return @CONNECTURL
+   else
+     raise Jirarest2::CouldNotHealURIError, @CONNECTURL
+   end
+ end
 
 =begin
 

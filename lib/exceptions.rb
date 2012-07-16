@@ -25,6 +25,11 @@ module Jirarest2
   class AuthentificationError < StandardError ; end
   # Authentification failed and JIRA(tm) requires a login with captcha to continue
   class AuthentificationCaptchaError < StandardError ; end
+  # 404 - Results in HTML body - not JSON
+  class NotFoundError < StandardError ; end
+  # Could not heal URI
+  class CouldNotHealURIError < StandardError ; end
+  
 
   ## credentials.rb
 
