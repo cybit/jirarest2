@@ -1,3 +1,21 @@
+=== 0.0.4 / 2012-07-17
+
+* 1 major enhancement:
+
+  * All the methods that took Credential objects before now take Conenction objects
+
+* 2 minor enhancements:
+
+  * added heal_uri and heal_uri! methods to try to find the right url if wanted.
+  * passes Connection to all other classes now and no longer credentials.
+
+* 3 bug fixes:
+
+  * -H in create_connection works now as intended. It's even better as you can give the login URL from you browser and it will automagically exract the correct API uri in usual cases. closes #3
+  * Shebang should work now (please remember this gem depends on ruby1.9.1 to work, gem2deb is not able to reflect that.) closes #2
+  * reduced the extension of the url to "/api/rest/2" closes #1
+
+
 === 0.0.3 / 2012-07-16
 
 * 2 major enhancements:
