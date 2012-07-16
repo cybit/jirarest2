@@ -6,7 +6,7 @@ README.md
 README.txt
 Rakefile
 bin/create_issue.rb
-header.copyright
+copyright
 lib/config.rb
 lib/connect.rb
 lib/credentials.rb
