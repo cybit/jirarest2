@@ -97,9 +97,15 @@ class ParseOptions
         scriptopts.username = u 
       end
       
-      opts.on("-H", "--jira-url URL", "URL to connect to jira in the browser") do |url|
-        uri = URI(URL)
-        scriptopts.url = uri.schme + "://" + uri.host + uri.port
+      opts.on("-H", "--jira-url URL", "URL to rest api (without \"/rest/api/2\").") do |url|
+        uri = URI(url)
+        splitURI = URI.split(url)
+        if splitURI[3] then
+          url = splitURI[0].to_s + "://" + splitURI[2].to_s + ":" + splitURI[3].to_s + splitURI[5].to_s
+        else
+          url = splitURI[0].to_s + "://" + splitURI[2].to_s + splitURI[5].to_s
+        end
+        scriptopts.url = url
       end
 
       opts.on_tail("-h", "--help", "Display this screen") do
@@ -131,8 +137,6 @@ end # class ParseOptions
 @issueopts, @scriptopts = ParseOptions.parse(ARGV)
 
 
-
-
 def no_issue(type,issue)
   puts "The #{type}type you entered (\"#{issue}\")  does no exist."
     puts "Maybe you entered the wrong type or made a typo? (Case is relevant!)"
@@ -153,8 +157,9 @@ def get_credentials
   @scriptopts.pass = fileconf["password"] if ( @scriptopts.pass.nil? && fileconf["password"] )
   if ( @scriptopts.url.nil? && fileconf["URL"] ) then
     @scriptopts.url = fileconf["URL"] 
-    @scriptopts.url = @scriptopts.url + "/jira/rest/api/2/"
   end
+  @scriptopts.url = @scriptopts.url + "/rest/api/2/"
+  
   if @scriptopts.pass.nil? then
     @scriptopts.pass = get_password
   end
@@ -163,13 +168,33 @@ def get_credentials
 end
 
 =begin
+ If there is already a conenction known returns that connection. If not or if the parameter is true it tries to create a new Connect object
+=end
+def get_connection(reconnect = false)
+  if ! @connection || reconnect then
+    begin
+      @connection = Connect.new(get_credentials)
+      @connection.heal_uri! # We want to be sure so we try to heal the connection_url if possible
+      return @connection
+    rescue Jirarest2::CouldNotHealURIError => e
+      puts "REST API not found at #{e.to_s}"
+      exit 3
+    end
+  else
+    return @connection
+  end
+end
+
+
+
+
+=begin
  create the issue on our side
 =end
 def open_issue
   begin
     credentials = get_credentials
-    issue=Issue.new(@issueopts.project,@issueopts.issue,credentials)
-    # issue=Issue.new(@issueopts.project,@issueopts.issue,@scriptopts.pass,@scriptopts.username)
+    issue=Issue.new(@issueopts.project,@issueopts.issue,get_connection)
   rescue Jirarest2::AuthentificationError => e
     puts "Password not accepted."
     @scriptopts.pass = get_password
@@ -231,10 +256,11 @@ end
 
 def create_new_ticket(issue)
   begin
-    result = issue.persist(get_credentials).result
+    connection = get_connection # We need it so often in the next few lines that I prefer to get the result in a variable
+    result = issue.persist(connection).result
     # Set the watchers
     if @issueopts.watchers then
-      watcherssuccess = issue.add_watchers(get_credentials,@issueopts.watchers)
+      watcherssuccess = issue.add_watchers(connection,@issueopts.watchers)
     end
   rescue Jirarest2::RequiredFieldNotSetException => e
     puts "Required field \"#{e.to_s}\" not set."
@@ -246,7 +272,6 @@ def create_new_ticket(issue)
       puts "Watchers could not be set though."
     end
     if @issueopts.link then
-      connection = Connect.new(get_credentials)
       link = IssueLink.new(connection)
       remoteIssue,linktype  = @issueopts.link.split("=")
       linkresult = link.link(result["key"],remoteIssue,linktype)
