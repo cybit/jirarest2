@@ -17,15 +17,13 @@
 
 require "services"
 
-=begin
-  An IssueLinkType Object represents one or all IssueLinkTypes
-=end
+#  An IssueLinkType Object represents one or all IssueLinkTypes
 class IssueLinkType < Services
 
-=begin
-  We expect to receive an existing 
-  :connection
-=end
+
+  # @param [Connection] connection
+  # @param [String] data issueLinkType ID 
+  # @return [Jirarest2::Result]
   def initialize(connection,data = "")
     if data == "" then
       @uritail = "issueLinkType"
@@ -37,9 +35,11 @@ class IssueLinkType < Services
   end
 
 private
-=begin
-  do the search for each block
-=end
+
+  # do the search for each block
+  # @param [Hash] hash One LinkIssueType in a hash representation
+  # @param [String] uiname the way the linktype is shown in the browser
+  # @return [Array] Actual name oft the LinkIssueType
   def name_block_search(hash,uiname)
     name = nil
     direction = nil
@@ -58,10 +58,10 @@ private
 
 
 public
-=begin
-  Get the internal name and direction instead of the one in the UI.
-  Returns an Array with the name and the direction ("inward" or "outward") if successfull , nil if not
-=end
+
+  #Get the internal name and direction instead of the one in the UI.
+  # @param [String] uiname the way the linktype is shown in the browser
+  # @return [Array, nil] Array with the name and the direction ("inward" or "outward") if successfull , nil if not
   def name(uiname)
     if @all["issueLinkTypes"].instance_of?(Array) then
       @all["issueLinkTypes"].each{ |hash|
@@ -74,9 +74,9 @@ public
     return nil # Nothing found don't want to return @all
   end # name
 
-=begin
-  Is the name realy the internal name we need to use?
-=end
+  # Is the name realy the internal name we need to use?
+  # @param [String] test String to test agains the names of IssueLinkTypes
+  # @return [Boolean] 
   def internal_name?(test)
     if @all["issueLinkTypes"].instance_of?(Array) then
       @all["issueLinkTypes"].each{ |hash|

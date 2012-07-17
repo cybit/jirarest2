@@ -20,36 +20,40 @@
 require 'json'
 
 module Jirarest2
-=begin
-  An object of Result contians the result of a Net::HTTP REST request that has a JSON-Body with easily accessable parameters.
-=end
-class Result
 
+#  An object of Result contians the result of a Net::HTTP REST request that has a JSON-Body with easily accessable parameters.
+  class Result
+    
   # The statuscode of the result
-  attr_reader :code
-  # header lines
-  attr_reader :header
-  # The original body of the result
-  attr_reader :body
-  # The JSON part of the body
-  attr_reader :result
-
-=begin
- Takes an Net::HTTPResponse object and builds itself from there
-=end
- def initialize(httpResponse)
-#   pp httpResponse
-#   pp httpResponse.body
-   @code = httpResponse.code
-   @header = httpResponse.to_hash
-   @body = httpResponse.body
-   if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" then # If there is nothing in the body it would be hard to parse it.
-     @result = @body
-   else
-     @result = JSON.parse(@body)
-   end
- end # initialize
-
-end # class
-
+    attr_reader :code
+    # header lines
+    attr_reader :header
+    # The original body of the result
+    attr_reader :body
+    # The JSON part of the body
+    attr_reader :result
+    
+    
+    # Show the result in a more usable form
+    # @param [Net::HTTPResponse]
+    def initialize(httpResponse)
+      #   pp httpResponse
+      #   pp httpResponse.class
+      #   pp httpResponse.body
+      @code = httpResponse.code
+      @header = httpResponse.to_hash
+      @body = httpResponse.body
+      #pp @body
+      if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" then # If there is nothing in the body it would be hard to parse it.
+        @result = @body
+      else
+        @result = JSON.parse(@body)
+      end
+      #pp @code
+      #pp @header
+      
+    end # initialize
+    
+  end # class
+  
 end # module

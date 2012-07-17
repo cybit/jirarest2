@@ -15,9 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-=begin
- Keep all the Exceptions in their own module
-=end
+# Keep all the Exceptions in their own module
 module Jirarest2
   ## connections.rb
 

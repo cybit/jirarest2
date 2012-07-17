@@ -17,6 +17,7 @@ require 'hoe'
 # Hoe.plugin :rubyforge
 # Hoe.plugin :rubygems
 # Hoe.plugin :website
+Hoe.plugin :yard
 
 Hoe.spec 'jirarest2' do
   developer('Cyril Bitterich', 'cebit-jirarest@gunnet.de')

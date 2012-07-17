@@ -15,39 +15,34 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "connect"
-=begin
-  Trying to keep the services together in one class so I don't have to write so much
-=end
+require_relative "connect"
+
+#  Trying to keep the services together in one class so I don't have to write so much
 class Services
 
-=begin
-  We expect to receive an existing 
-  :connection
-=end
+  # @param [Connection]
   def initialize(connection)
     @connection = connection
 # to be set in each subclass;
 #    @uritail = ""
   end
 
-=begin
- Send the GET request
-=end
+  # Send the GET request
+  # @param [Hash] data to be sent to Connection.execute
   def get(data = "")
     return @connection.execute("Get",@uritail,data).result
   end
   
-=begin
- Send the POST request
-=end
+
+  # Send the POST request
+  # @param [Hash] data to be sent to Connection.execute
   def post(data = "")
     return @connection.execute("Post",@uritail,data)
   end  
 
-=begin
- Send the DELETE request
-=end
+  
+  # Send the DELETE request
+  # @param [Hash] data to be sent to Connection.execute
   def delete(data = "")
     return @connection.execute("Delete",@uritail,data)
   end

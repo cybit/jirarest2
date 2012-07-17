@@ -15,20 +15,18 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-=begin
- Module to handle configuration files
-=end
+# Module to handle configuration files
 module MadbitConfig
 
-=begin
- Special exception to make the point why we threw it around
-=end
+
+# Special exception to make the point why we threw it around
   class FileExistsException < IOError ; end
   
-=begin
- Inspired by http://www.erickcantwell.com/2011/01/simple-configuration-file-reading-with-ruby/
- reads a config-file and returns a hash
-=end
+
+# Inspired by http://www.erickcantwell.com/2011/01/simple-configuration-file-reading-with-ruby/
+
+# reads a config-file and returns a hash
+# @param [String] configfile
   def self.read_configfile(config_file)
     config_file = File.expand_path(config_file)
 
@@ -59,12 +57,11 @@ module MadbitConfig
     return vars
   end # read.configfile
 
-=begin
- write a configfile
- @param [configfile, String] Name (and path) of the config file
- @param [configoptions, Hash] Hash of "option" => "value" pairs
- @param [save, Symbol] Keep an existing file? :force replaces an existing file
-=end
+
+# write a configfile
+# @param [String] config_file Name (and path) of the config file
+# @param [Hash] configoptions Hash of "option" => "value" pairs
+# @param [Symbol] save Determines if an existing file is to be kept. :force replaces an existing file
   def self.write_configfile(config_file, configoptions, save = :noforce)
     config_file = File.expand_path(config_file) # Be save
     

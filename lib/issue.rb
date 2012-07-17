@@ -15,9 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-=begin
- An Issue object contains all the data of an issue
-=end
+# An Issue object contains all the data of an issue
 class Issue
   
   
@@ -28,10 +26,9 @@ class Issue
   # The issue numer if we got it somehow
   attr_reader :issuekey
   
-=begin
-  New initialize method we take the project and the type we want to use and a connection
-  project Name of the project this issue is to live in
-=end
+  # @param [String] project Key of the JIRA(tm) project the issue belongs to
+  # @param [String] type Issuetype the issue belongs to
+  # @param [Connection] connection
   def initialize (project,type,connection)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
     answer = connection.execute("Get","issue/createmeta/",query)
@@ -41,10 +38,8 @@ class Issue
     raise Jirarest2::WrongIssuetypeException, type if @issuetype == ""
   end
 
-=begin
- It needs the hashed version of the json-snippet jira returns
- It produces an instance-variable @issuefields that can be 
-=end
+  # produces an instance-variable @issuefields that can be 
+  # @param [Hash] jhash Hashed version of the json-snippet JIRA(tm) returns
   def parse_json (jhash)
     @issuefields = Hash.new
     @project = ""
@@ -84,9 +79,8 @@ class Issue
     }
   end
   
-=begin
- Return the type of a field
-=end
+  # @param [String] field Name of the field
+  # @return [String] type of the Field 
   def fieldtype(field)
     # If the fieldname is wrong we want to tell this and stop execution (or maybe let the caller fix it)
     if @issuefields[field].nil? then
@@ -96,9 +90,7 @@ class Issue
     end
   end
   
-=begin
- Return all the fields that are required for this issuetype
-=end
+  # @return [Array] Names of required fields
   def get_requireds
     names = Array.new
     @issuefields.each {|key,value|
@@ -109,9 +101,7 @@ class Issue
     return names
   end
 
-=begin
- Return all the names of the fields
-=end
+  # @return [Array] Names of all fields
   def get_fieldnames
     names = Array.new
     @issuefields.each {|key,value|
@@ -120,17 +110,14 @@ class Issue
     return names
   end
 
-=begin
- return the id of a field name
-=end
+  # @param [String] name Name of a field
+  # @return [String] id of the field
   protected
   def get_id(name)
     return @issuefields["name"]["id"]
   end
 
 =begin
- return a hash that can be sent to jira
-Lets create a new issue
 query=
 {"fields"=>
   { "project"=>{"key"=>"MFTP"}, 
@@ -140,6 +127,7 @@ query=
   }
 }
 =end
+  # @return [Hash] Hash to be sent to jira in a JSON representation
   public
   def jirahash
     h = Hash.new
@@ -161,9 +149,10 @@ query=
     return h
   end
 
-=begin
- checks if the value is allowed for this field
-=end
+  # check if the value is allowed for this field
+  # @param [String] key Name of the field
+  # @param [String] value Value to be checked
+  # @return [Boolean, Jirarest2::ValueNotAllowedException]
   protected
   def value_allowed?(key,value)
     if @issuefields[key]["allowedValues"].include?(value) 
@@ -174,11 +163,12 @@ query=
     end
   end
 
-=begin
- Special setter for fields that have a limited numer of allowed values.
 
- This setter might be included in set_field at a later date.
-=end
+  # Special setter for fields that have a limited numer of allowed values.
+  #
+  # This setter might be included in set_field at a later date.
+  # @param [String] key Name of the field
+  # @param [String] value Value to be checked
   def set_allowed_value(key,value)
     if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
       array = Array.new
@@ -195,12 +185,10 @@ query=
     end
   end
 
-=begin
-  Setter fuer die Felder des Issues
-  :key is the name of the field
-  :value is is the value the field should get , this is either a String or an Array (don't know if numbers work too)
-TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect")
-=end
+
+  # TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect")
+  # @param [String] key Name of the field
+  # @param [String] value Value the field should be set to, this is either a String or an Array (don't know if numbers work too)
   public
   def set_field(key, value)
     if  @issuefields.include?(key) then
@@ -215,16 +203,15 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
     end
   end
 
-=begin
-  Get the value of a certain field
-=end
+  # @param [String] field Name of the field
+  # @return [String] value of the field
   def get_field(field)
     @issuefields[field]["value"]
   end
 
-=begin
- create a new ticket
-=end
+  # persitence of this Issue object instance
+  # @param [Connection] connection
+  # @return [Jirarest2::Result]
   def persist(connection)
     get_requireds.each { |fieldname| 
       if @issuefields[fieldname]["value"].nil? then
@@ -240,10 +227,11 @@ TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com
   end
 
 
-=begin
- Set the watchers for this Ticket
- watchers has to be an Array
-=end
+
+  # Set the watchers for this Ticket
+  # @param [Connection] connection
+  # @param [Array] watchers Watchers to be added
+  # @return [Boolean] True if successfull for all
   def add_watchers(connection,watchers)
     success = false # Return whether we were successful with the watchers
     watch = Watcher.new(connection,@issuekey)

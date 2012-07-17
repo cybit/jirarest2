@@ -18,22 +18,20 @@
 require "connect"
 require "services"
 
-=begin
-  Watchers do have their own calling
-=end
+#  Watchers do have their own calling
 class Watcher < Services
 
-=begin
-  Set our uritail
-=end
+  #  Set our uritail
+  # @param [Connection] connection 
+  # @param [String] issueid The id or key of the issue in question
   def initialize(connection, issueid)
     @uritail = "issue/#{issueid}/watchers"
     super(connection)
   end
 
-=begin
- Return all the watchers of the issue
-=end
+
+  # Return all the watchers of the issue
+  # @return [String] Usernames of watching users
   def get_watchers
     ret = get
     watchers = Array.new
@@ -43,9 +41,10 @@ class Watcher < Services
     return watchers
   end
   
-=begin
-  Adds a new watcher for the issue
-=end
+
+  # Adds a new watcher for the issue
+  # @param [String] username Username of the new watcher
+  # @return [Boolean] Success
   def add_watcher(username)
     ret = post(username)
     case ret.code
@@ -56,9 +55,10 @@ class Watcher < Services
     end
   end
 
-=begin
-  removes one watcher from the issue
-=end
+
+  # remove one watcher from the issue
+  # @param [String] username Username of the watcher to delete
+  # @return [Boolean] Success
   def remove_watcher(username)
     query = {"username" => username}
     ret = delete(query)

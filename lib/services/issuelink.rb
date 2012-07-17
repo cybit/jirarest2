@@ -21,10 +21,8 @@ require "issue"
 require "services/issuelinktype"
 require "exceptions"
 
-=begin
-  This class is responsible for the Linking of Issues
-  No real getter as of yet (I just didn't need it)
-=end
+#  This class is responsible for the Linking of Issues
+#  No real getter as of yet (I just didn't need it)
 class IssueLink < Services
 
   def initialize(connection)
@@ -33,9 +31,10 @@ class IssueLink < Services
   end
 
   private
-=begin
- return the issuekey
-=end
+
+  # return the issuekey regardless whether we got an Issue or just the Key
+  # @param [String, Issue] issue
+  # @return [String]
   def key(issue)
     if issue.instance_of?(Issue) then
       return issue.issuekey 
@@ -45,10 +44,14 @@ class IssueLink < Services
   end
   
   public
-=begin
- Links two issues
- Right now the visibility feature for comments is not supported
-=end
+
+  # Links two issues
+  # Right now the visibility feature for comments is not supported
+  # @param [String, Issue] thisIssue Issue to connect from
+  # @param [String, Issue] remoteIssue Issue to connect to
+  # @param [String] type Link type
+  # @param [String] comment If a comment should be set while linking
+  # @return [Jirarest2::Result] The result of the linking
   def link_issue(thisIssue,remoteIssue,type,comment = nil)
     inwardIssue = key(thisIssue)
     outwardIssue = key(remoteIssue)
@@ -80,9 +83,12 @@ class IssueLink < Services
     return post(json)
   end
 
-=begin
- Only true if successfully linked false if something happened. Elseway exactly as link_issue.
-=end
+  # does the linking ig you don't want to bother with the exact result
+  # @param [String, Issue] thisIssue Issue to connect from
+  # @param [String, Issue] remoteIssue Issue to connect to
+  # @param [String] type Link type
+  # @param [String] comment If a comment should be set while linking
+  # @return [Boolean] Only true if successfully linked false if something happened. Elseway exactly as link_issue.
   def link(thisIssue,remoteIssue,type,comment = nil)
     if link_issue(thisIssue,remoteIssue,type,comment).code == "201" then
       return true
@@ -90,5 +96,5 @@ class IssueLink < Services
       return false
     end
   end
-
+  
 end # class

@@ -22,14 +22,12 @@ require 'jirarest2/result'
 require "pp"
 
 
-=begin
- An Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a Jirarest2::Result object or an exception if something went wrong.
-=end
+
+# A Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a Jirarest2::Result object or an exception if something went wrong.
 class Connect
   
-=begin
- Create an instance of Connect. It needs an Credentials object to be created.
-=end
+# Create an instance of Connect.
+# @param [Credentials] credentials
   def initialize(credentials)
     @pass = credentials.password
     @user = credentials.username
@@ -37,12 +35,12 @@ class Connect
   end
 
   
-=begin
- Execute the request
- * operation = one of Get, Post, Delete, Put
- * uritail = the last part of the REST URI
- * data = data to be sent.
-=end
+
+# Execute the request
+# @param [String, "Get", "Post", "Delete", "Put"] operation HTTP method:  GET, POST, DELETE, PUT
+# @param [String] uritail The last part of the REST URI
+# @param [Hash] data Data to be sent.
+# @return [Jirarest2::Result]
   def execute(operation,uritail,data)
     uri = nil
     uri = URI(@CONNECTURL+uritail)
@@ -85,9 +83,9 @@ class Connect
     return Jirarest2::Result.new(result)
   end # execute
 
-=begin
- Is the rest API really at the destination we think it is?
-=end
+
+# Is the rest API really at the destination we think it is?
+# @return [Boolean] 
   def check_uri
     begin 
       begin
@@ -98,9 +96,9 @@ class Connect
     end
   end
 
-=begin
- Try to be nice. Parse the URI and see if you can find a pattern to the problem
-=end
+# Try to be nice. Parse the URI and see if you can find a pattern to the problem
+# @param [String] url
+# @return [String] a fixed URL
   def heal_uri(url = @CONNECTURL)
     splitURI = URI.split(url) # [Scheme,Userinfo,Host,Port,Registry,Path,Opaque,Query,Fragment]
     splitURI[5].gsub!(/^(.*)2$/,'\12/')
@@ -115,12 +113,10 @@ class Connect
     end
     return url
   end
-end # class
 
-=begin
- try to fix the connecteurl of this instance 
-=end
-public
+
+# try to fix the connecturl of this instance 
+# @return [String,Jirarest2::CouldNotHealURIError] Fixed URL or Exception
  def heal_uri!
    if ! check_uri then
      @CONNECTURL = heal_uri(@CONNECTURL)
@@ -132,8 +128,9 @@ public
    end
  end
 
-=begin
+end # class
 
+=begin
 
 # Add a Key-Value for every search parameter you'd usually have.
 query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
