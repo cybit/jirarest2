@@ -6,8 +6,8 @@ README.md
 README.txt
 Rakefile
 bin/create_issue.rb
+bin/jira_create_issue.rb
 copyright
-lib/config.rb
 lib/connect.rb
 lib/credentials.rb
 lib/exceptions.rb
@@ -15,14 +15,17 @@ lib/issue.rb
 lib/issuelink.rb
 lib/jirarest2.rb
 lib/jirarest2/result.rb
+lib/madbitconfig.rb
 lib/services.rb
 lib/services/issuelink.rb
 lib/services/issuelinktype.rb
 lib/services/watcher.rb
+test/data/test.config.data
 test/test_connect.rb
 test/test_credentials.rb
 test/test_issue.rb
 test/test_issuelink.rb
 test/test_issuelinktype.rb
+test/test_madbitconfig.rb
 test/test_result.rb
 test/test_watcher.rb

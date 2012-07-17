@@ -24,7 +24,7 @@ The script allows you to create new issues with watchers and link those to exist
 
 == SYNOPSIS:
 
-create_issue -h
+jira_create_issue -h
 
 == REQUIREMENTS:
 
