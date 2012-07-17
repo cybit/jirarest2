@@ -28,7 +28,7 @@ require "highline/import"
 require "jirarest2"
 require "optparse"
 require "ostruct"
-require "config"
+require "madbitconfig"
 require "uri"
 require "pp"
 
@@ -92,6 +92,15 @@ class ParseOptions
       opts.on("--config-file CONFIGFILE", "Config file containing the jira credentials. (Default: ~/.jiraconfig)") do |conffile|
         scriptopts.configfile = conffile
       end
+      
+      opts.on("--write-config-file", "Writes the configfile with the data given if it does not alredy exist.") do |wc|
+        scriptopts.writeconf = :write
+      end
+
+      opts.on("--force-write-config-file", "Writes the configfile with the data given even if it does alredy exist.") do |wc|
+        scriptopts.writeconf = :forcewrite
+      end
+      
 
       opts.on("-u", "--username USERNAME", "Your Jira Username if you don't want to use the one in the master file") do |u|
         scriptopts.username = u 
@@ -122,10 +131,10 @@ class ParseOptions
   
     opts.parse!(args)
 
-    if issueopts.project.nil? then
+    if issueopts.project.nil? && scriptopts.writeconf.nil? then
       required_argument("project")      
     end
-    if issueopts.issue.nil? then
+    if issueopts.issue.nil? && scriptopts.writeconf.nil? then
       required_argument("issue")
     end
     return issueopts, scriptopts
@@ -143,28 +152,49 @@ def no_issue(type,issue)
     exit 1
 end
 
+=begin
+  Get the password from an interactive shell
+=end
 def get_password
-  ask("Enter your password for user \"#{@scriptopts.username}\":  ") { |q| q.echo = "*" }
+  ask("Enter your password for user \"#{@scriptopts.username}\":  ") { |q| 
+    q.echo = "*" 
+  }
 end
 
 =begin
   Gather all the credentials and build the credentials file
 =end
 def get_credentials
-  fileconf = Config::read_configfile(@scriptopts.configfile)
-  # We don't want to set the calues from the configfile if we have them already set.
-  @scriptopts.username = fileconf["username"] if ( @scriptopts.username.nil? && fileconf["username"] )
-  @scriptopts.pass = fileconf["password"] if ( @scriptopts.pass.nil? && fileconf["password"] )
-  if ( @scriptopts.url.nil? && fileconf["URL"] ) then
-    @scriptopts.url = fileconf["URL"] 
+  filefail = false
+  begin
+    fileconf = MadbitConfig::read_configfile(@scriptopts.configfile)
+    # We don't want to set the Values from the configfile if we have them already set.
+    @scriptopts.username = fileconf["username"] if ( @scriptopts.username.nil? && fileconf["username"] )
+    @scriptopts.pass = fileconf["password"] if ( @scriptopts.pass.nil? && fileconf["password"] )
+    if ( @scriptopts.url.nil? && fileconf["URL"] ) then
+      @scriptopts.url = fileconf["URL"] 
+    end
+  rescue IOError => e
+    puts e
+    filefail = false
   end
   @scriptopts.url = @scriptopts.url + "/rest/api/2/"
-  
-  if @scriptopts.pass.nil? then
+
+
+  if @scriptopts.pass.nil? && !( @scriptopts.username.nil?)  then
     @scriptopts.pass = get_password
   end
-  
-  return Credentials.new(@scriptopts.url, @scriptopts.username, @scriptopts.pass)
+
+  missing = Array.new
+  missing << "URL"  if @scriptopts.url.nil?
+  missing << "username" if  @scriptopts.username.nil?
+#  missing << "password" if @scriptopts.pass.nil?
+  if  missing != [] then
+    puts "Missing essential parameter(s) #{missing.join(",")}. Exiting..."
+    exit 1
+  else
+    return Credentials.new(@scriptopts.url, @scriptopts.username, @scriptopts.pass)
+  end
 end
 
 =begin
@@ -184,9 +214,6 @@ def get_connection(reconnect = false)
     return @connection
   end
 end
-
-
-
 
 =begin
  create the issue on our side
@@ -210,6 +237,9 @@ def open_issue
   return issue
 end
 
+=begin
+ Show available fields and required fields
+=end
 def show_scheme
   issue = open_issue
   if @scriptopts.show.include?("fields") then
@@ -223,7 +253,9 @@ def show_scheme
   exit
 end
 
-
+=begin
+  Prepare a new ticket. It will not be persisted yet.
+=end
 def prepare_new_ticket
   issue = open_issue
   valueNotAllowedRaised = false
@@ -250,10 +282,16 @@ def prepare_new_ticket
   return issue
 end
 
+=begin
+  a little bit to fine - could be put into the method below
+=end
 def set_watchers(issue)
   issue.set_watcher(credentials,@issueopts.watchers)
 end
 
+=begin
+  do all the work to actually create a new ticket (persist, watchers, links) 
+=end
 def create_new_ticket(issue)
   begin
     connection = get_connection # We need it so often in the next few lines that I prefer to get the result in a variable
@@ -268,7 +306,7 @@ def create_new_ticket(issue)
   end
   if result["key"] then
     puts "Created new issue with issue id #{result["key"]} ."
-    if ! watcherssuccess then
+    if ! watcherssuccess && @issueopts.watchers then
       puts "Watchers could not be set though."
     end
     if @issueopts.link then
@@ -283,10 +321,43 @@ def create_new_ticket(issue)
   end
 end
 
+=begin
+ called to write the config file
+=end
+def write_configfile
+  text = Hash.new
+  if @scriptopts.url.nil? then
+    text["#URL"] = "https://host.domain.com:port/path/"
+  else
+    text["URL"] = "#{@scriptopts.url}"
+  end
+  if @scriptopts.username.nil? then
+    text["#username"] = "USERNAME"
+  else
+    text["username"] = "#{@scriptopts.username}"
+  end
+  text["#password"] = "Your!PassW0rd"
+  begin
+    if @scriptopts.writeconf == :forcewrite then
+      MadbitConfig::write_configfile(@scriptopts.configfile,text,:force)
+    else
+      MadbitConfig::write_configfile(@scriptopts.configfile,text)
+    end
+    puts "Configfile written to #{@scriptopts.configfile}. Exiting."
+    exit 0
+  rescue MadbitConfig::FileExistsException => e
+    puts "Configfile #{e} already exists. Use \"--force-write-config-file\" to replace."
+    exit 1
+  end
+end
+
 
 # The "main function"
 if @scriptopts.show != [] then
   show_scheme
+end
+if @scriptopts.writeconf then
+  write_configfile
 end
 if ! @issueopts.content.nil? then # If the -c option is set. (-c and no content leads to another exception)
   content = prepare_new_ticket

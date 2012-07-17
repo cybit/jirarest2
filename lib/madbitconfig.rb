@@ -18,7 +18,13 @@
 =begin
  Module to handle configuration files
 =end
-module Config
+module MadbitConfig
+
+=begin
+ Special exception to make the point why we threw it around
+=end
+  class FileExistsException < IOError ; end
+  
 =begin
  Inspired by http://www.erickcantwell.com/2011/01/simple-configuration-file-reading-with-ruby/
  reads a config-file and returns a hash
@@ -27,7 +33,7 @@ module Config
     config_file = File.expand_path(config_file)
 
     unless File.exists?(config_file) then
-      raise "Unable to find config file"
+      raise IOError, "Unable to find config file \"#{config_file}\""
     end
     
     regexp = Regexp.new(/\s+|"|\[|\]/)
@@ -41,8 +47,8 @@ module Config
       elsif line.match(/^\s*$/) # no text, no content
         next
       else
-# Right now I don't know what to use scan for. It will escape " nice enough. But once that is excaped the regexp doesn't work any longer.
-#        temp[0],temp[1] = line.to_s.scan(/^.*$/).to_s.split("=")
+        # Right now I don't know what to use scan for. It will escape " nice enough. But once that is excaped the regexp doesn't work any longer.
+        #        temp[0],temp[1] = line.to_s.scan(/^.*$/).to_s.split("=")
         temp[0],temp[1] = line.to_s.split("=")
         temp.collect! { |val|
           val.gsub(regexp, "")
@@ -51,5 +57,29 @@ module Config
       end
     }
     return vars
-  end
-end
+  end # read.configfile
+
+=begin
+ write a configfile
+ @param [configfile, String] Name (and path) of the config file
+ @param [configoptions, Hash] Hash of "option" => "value" pairs
+ @param [save, Symbol] Keep an existing file? :force replaces an existing file
+=end
+  def self.write_configfile(config_file, configoptions, save = :noforce)
+    config_file = File.expand_path(config_file) # Be save
+    
+    # First we make sure we don't overwrite a file if the save - flag is set.
+    if save != :force then
+      if File.exists?(config_file) then
+        raise FileExistsException, config_file
+      end
+    end
+    # write the file
+    File.open(config_file, File::CREAT|File::TRUNC|File::RDWR,0600) { |f|
+      configoptions.each { |option,value|
+        f.write( option + " = " + value  + "\n")
+      }
+    } # File
+  end # write_configfile
+
+end # module
