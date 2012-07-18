@@ -18,6 +18,7 @@
 # Module to handle configuration files
 module MadbitConfig
 
+require "json"
 
 # Special exception to make the point why we threw it around
   class FileExistsException < IOError ; end
@@ -25,43 +26,63 @@ module MadbitConfig
 
 # Inspired by http://www.erickcantwell.com/2011/01/simple-configuration-file-reading-with-ruby/
 
-# reads a config-file and returns a hash
-# @param [String] configfile
-  def self.read_configfile(config_file)
-    config_file = File.expand_path(config_file)
-
-    unless File.exists?(config_file) then
-      raise IOError, "Unable to find config file \"#{config_file}\""
+  # reads a config-file and returns a hash
+  # The config file can either contain key = value pairs or JSON data
+  # JSON and simple "key = value\n" lines work 
+  # TODO make it work with "key = [value,value]\n" or even "key = value1 \n value2 \n ..."
+  # @param [String] configfile
+  # @param [Boolean] whitespace Keep whitespace characters? 
+  # @return [Hash] Hash configparameters
+  def self.read_configfile(config_file,whitespace = false)
+    if whitespace then    
+      regexp = Regexp.new(/"|\[|\]/)
+    else
+      regexp = Regexp.new(/\s+|"|\[|\]/)
     end
-    
-    regexp = Regexp.new(/\s+|"|\[|\]/)
     
     temp = Array.new
     vars = Hash.new
-    
-    IO.foreach(config_file) { |line|
-      if line.match(/^\s*#/) #  don't care about lines starting with an # (even after whitespace)
-        next
-      elsif line.match(/^\s*$/) # no text, no content
-        next
-      else
-        # Right now I don't know what to use scan for. It will escape " nice enough. But once that is excaped the regexp doesn't work any longer.
-        #        temp[0],temp[1] = line.to_s.scan(/^.*$/).to_s.split("=")
-        temp[0],temp[1] = line.to_s.split("=")
-        temp.collect! { |val|
-          val.gsub(regexp, "")
-        }
-        vars[temp[0]] = temp[1]
+    file = String.new
+
+    if config_file == "-" then
+      # caller wants STDIN
+      file = ARGF.read
+    else
+      # caller wants real file
+      config_file = File.expand_path(config_file)
+      unless File.exists?(config_file) then
+        raise IOError, "Unable to find config file \"#{config_file}\""
       end
-    }
+      file = IO.read(config_file)
+    end
+    if file =~ /^\s*{/ then
+      vars = JSON.parse(file)
+    else
+      file.each_line { |line|
+        if line.match(/^\s*#/) #  don't care about lines starting with an # (even after whitespace)
+          next
+        elsif line.match(/^\s*$/) # no text, no content
+          next
+        else
+          # Right now I don't know what to use scan for. It will escape " nice enough. But once that is excaped the regexp doesn't work any longer.
+          temp[0],temp[1] = line.to_s.scan(/^.*$/).to_s.split("=")
+          #temp[0],temp[1] = line.to_s.split("=")
+          temp.collect! { |val|
+            val.gsub(regexp, "")
+          }
+          vars[temp[0]] = temp[1]
+        end
+      }
+    end # JSON or not?
+    
     return vars
   end # read.configfile
-
-
-# write a configfile
-# @param [String] config_file Name (and path) of the config file
-# @param [Hash] configoptions Hash of "option" => "value" pairs
-# @param [Symbol] save Determines if an existing file is to be kept. :force replaces an existing file
+  
+  
+  # write a configfile
+  # @param [String] config_file Name (and path) of the config file
+  # @param [Hash] configoptions Hash of "option" => "value" pairs
+  # @param [Symbol] save Determines if an existing file is to be kept. :force replaces an existing file
   def self.write_configfile(config_file, configoptions, save = :noforce)
     config_file = File.expand_path(config_file) # Be save
     

@@ -29,5 +29,17 @@ class TestConfig < MiniTest::Unit::TestCase
     
   end
 
+  def test_readjfile
+    testdir = File.dirname($0)
+    testfile =  testdir + "/test/data/test.json"
+    assert_equal ["One", "Two", "Three", "Four"],MadbitConfig::read_configfile(testfile)["Many Values"]
+    testfile =  testdir + "/test/data/test.nojson"
+    assert_equal " \\This is a summary. We prefer to use it, as is\\", MadbitConfig::read_configfile(testfile, true)["\\Summary\\ "] # Not really what we want but didn't know how to fix now
+    testfile =  testdir + "/test/data/test.nojson1"
+    assert_equal " One, Two, Three, Four",MadbitConfig::read_configfile(testfile, true)["Many Values "]
+    
+    # I dont' know how to run this test in a automated setup. How do we feed one of the files above to STDIN so the testscript gets the data?
+    # pp MadbitConfig::read_configfile("-") 
+  end
   
 end

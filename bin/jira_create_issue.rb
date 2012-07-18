@@ -76,6 +76,10 @@ class ParseOptions
         issueopts.content = list
       end
       
+      opts.on("-C", "--content-file FILENAME", "JSON formatted file (or \"-\" for STDIN) with the contents of -c (Pipes work only if URL,username AND password are in the CONFIGFILE!)") do |contentfile|
+        scriptopts.contentfile = contentfile
+      end
+      
       opts.on("-w", "--watcher USERNAME,USERNAME", Array, "List of watchers") do |w|
         issueopts.watchers = w
       end
@@ -253,29 +257,49 @@ def show_scheme
   exit
 end
 
-=begin
-  Prepare a new ticket. It will not be persisted yet.
-=end
-def prepare_new_ticket
-  issue = open_issue
-  valueNotAllowedRaised = false
+# Split the content from the command line parameter "-c"
+def split_content(issue)
+  fields = Hash.new
   @issueopts.content.each { |value|
     split = value.split("=")
-    begin
-      if issue.fieldtype(split[0]) == "array" then # If the fieldtype is an array we want to use our arrayseparator to split the fields
-        if ! split[1].nil? then 
-          split[1] = split[1].split(@scriptopts.arrayseperator)
-        end
+    if issue.fieldtype(split[0]) == "array" then # If the fieldtype is an array we want to use our arrayseparator to split the fields
+      if ! split[1].nil? then 
+        split[1] = split[1].split(@scriptopts.arrayseperator)
       end
-      issue.set_field(split[0],split[1])
-    rescue Jirarest2::WrongFieldnameException => e
-      no_issue("field",e)
-    rescue Jirarest2::ValueNotAllowedException => e
-      puts "Value #{split[1]} not allowed for field #{split[0]}."
-      puts "Please use one of: \"" + e.message.join("\", \"") + "\""
-      valueNotAllowedRaised = true
     end
+    fields[split[0]] = split[1]
   }
+  return fields
+end
+
+#  Prepare a new ticket. It will not be persisted yet.
+def prepare_new_ticket
+  issue = open_issue
+  begin
+    if @scriptopts.contentfile then
+      #Input from file or STDIN
+      puts "Your Input now"
+      fields = MadbitConfig::read_configfile(@scriptopts.contentfile)
+    else
+      #Input from the command line
+      fields =  split_content(issue)
+    end
+    valueNotAllowedRaised = false
+    fields.each { |name,value|
+      issue.set_field(name,value) 
+    }
+  rescue JSON::ParserError => e
+    raise JSON::ParserError, e # Maybe I want to make this nice sometimes
+  rescue Jirarest2::WrongFieldnameException => e
+    no_issue("field",e)
+  rescue Jirarest2::ValueNotAllowedException => e
+    puts "Value #{split[1]} not allowed for field #{split[0]}."
+    puts "Please use one of: \"" + e.message.join("\", \"") + "\""
+    valueNotAllowedRaised = true
+  end
+=begin
+}
+=end
   if valueNotAllowedRaised then
     raise Jirarest2::ValueNotAllowedException
   end
