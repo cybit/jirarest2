@@ -2,7 +2,6 @@
 GPLv3
 History.txt
 Manifest.txt
-README.md
 README.txt
 Rakefile
 bin/create_issue.rb
@@ -20,6 +19,10 @@ lib/services/issuelink.rb
 lib/services/issuelinktype.rb
 lib/services/watcher.rb
 test/data/test.config.data
+test/data/test.json
+test/data/test.nojson
+test/data/test.nojson1
+test/data/ticket.json
 test/test_connect.rb
 test/test_credentials.rb
 test/test_issue.rb

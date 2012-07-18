@@ -7,7 +7,7 @@ require 'hoe'
 # Hoe.plugin :cucumberfeatures
  Hoe.plugin :doofus
 # Hoe.plugin :gem_prelude_sucks
-# Hoe.plugin :gemspec
+ Hoe.plugin :gemspec
  Hoe.plugin :git
 # Hoe.plugin :inline
 # Hoe.plugin :manifest
@@ -24,6 +24,11 @@ Hoe.spec 'jirarest2' do
 
   extra_deps << ['json', ">= 1.6.0"]
   extra_deps << ['highline', ">= 1.1.0"]
+
+
+#  self.yard_title = 'Jirarest2'
+#  self.yard_markup = :markdown
+  self.yard_opts = ['--protected'] # any additional YARD options
 
   # self.rubyforge_name = 'jirarest2x' # if different than 'jirarest2'
 end

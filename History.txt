@@ -1,3 +1,9 @@
+=== 0.0.6 / 2012-07-18
+
+* 1 minor enhancement:
+
+  * jira_create_issue.rb : Added the possibility to enter the issuefields ("-c") via STDIN or a file . Piping the data works only if URL,username and password are in the configfile (default: ~/.jiraconfig).
+
 === 0.0.5 / 2012-07-18
 
 * 1 major enhancement:
