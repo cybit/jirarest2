@@ -15,10 +15,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+=begin
 # An Issue object contains all the data of an issue
+=end
 class Issue
-  
-  
+    
   # issue type of the issue 
   attr_reader :issuetype
   # project the issue belongs to
@@ -118,16 +119,17 @@ class Issue
   end
 
 =begin
-query=
-{"fields"=>
-  { "project"=>{"key"=>"MFTP"}, 
-    "environment"=>"REST ye merry gentlemen.", 
-    "My own text"=>"Creating of an issue using project keys and issue type names using the REST API",
-    "issuetype"=> {"name"=>"My own type"}
-  }
-}
+# query=
+# {"fields"=>
+#  { "project"=>{"key"=>"MFTP"}, 
+#    "environment"=>"REST ye merry gentlemen.", 
+#    "My own text"=>"Creating of an issue using project keys and issue type names using the REST API",
+#    "issuetype"=> {"name"=>"My own type"}
+#  }
+# }
 =end
-  # @return [Hash] Hash to be sent to jira in a JSON representation
+
+  # @return [Hash] Hash to be sent to JIRA(tm) in a JSON representation
   public
   def jirahash
     h = Hash.new
@@ -243,5 +245,3 @@ query=
 
   
 end # class
-
-

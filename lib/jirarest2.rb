@@ -17,7 +17,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 
 require_relative "connect"
 require_relative "issue"

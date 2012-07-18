@@ -1,3 +1,22 @@
+=== 0.0.5 / 2012-07-18
+
+* 1 major enhancement:
+
+  * renamed create_issue.rb to jira_create_issue.rb to avoid (at least some) naming conflics
+
+* 2 minor enhancements:
+
+  * Added support to write config file closes #4
+  * moved config to madbitconfig and Module Config to MadbitConfig to get rid of conflict with the config class from ruby.
+
+* 1 bug fix:
+
+  * Fixed changed Module name in create_issue
+
+* 2 unknowns:
+
+  * Reworked documentation
+
 === 0.0.4 / 2012-07-17
 
 * 1 major enhancement:

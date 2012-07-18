@@ -12,7 +12,6 @@ lib/connect.rb
 lib/credentials.rb
 lib/exceptions.rb
 lib/issue.rb
-lib/issuelink.rb
 lib/jirarest2.rb
 lib/jirarest2/result.rb
 lib/madbitconfig.rb
