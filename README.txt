@@ -19,7 +19,7 @@ The script allows you to create new issues with watchers and link those to exist
 
 == FEATURES/PROBLEMS:
 
-   * Still in the very first alpha stages. The classes are still pretty volatile.
+   * Still in the alpha stages. The classes are still pretty volatile.
    * The script allows you to create new issues with watchers and link those to existing issues
 
 == SYNOPSIS:
