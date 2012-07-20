@@ -5,6 +5,7 @@ Manifest.txt
 README.txt
 Rakefile
 bin/create_issue.rb
+bin/jira_create_issue
 bin/jira_create_issue.rb
 copyright
 lib/connect.rb
