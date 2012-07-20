@@ -17,7 +17,7 @@
 
 
 require 'net/http'
-require 'exceptions'
+require 'jirarest2/exceptions'
 require 'jirarest2/result'
 require "pp"
 

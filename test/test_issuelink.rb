@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 require "minitest/autorun"
-require "credentials"
-require "connect"
-require "services/issuelink"
+require "jirarest2/credentials"
+require "jirarest2/connect"
+require "jirarest2/services/issuelink"
 
 class TestIssueLink < MiniTest::Unit::TestCase
   def setup
@@ -28,4 +28,8 @@ class TestIssueLink < MiniTest::Unit::TestCase
     assert "201",link.link_issue("MFTP-6","SP-3","is cloned by")
   end
   
+  def test_valid_issuelinktype
+    link = IssueLink.new(@con)
+    assert_match /blocks, Cloners, is cloned by,/ , link.valid_issuelinktypes
+  end
 end

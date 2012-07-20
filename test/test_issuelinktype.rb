@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 require "minitest/autorun"
-require "credentials"
-require "connect"
-require "services/issuelinktype"
+require "jirarest2/credentials"
+require "jirarest2/connect"
+require "jirarest2/services/issuelinktype"
 
 
 class TestIssueLinkType < MiniTest::Unit::TestCase
@@ -29,7 +29,16 @@ class TestIssueLinkType < MiniTest::Unit::TestCase
     linktype = IssueLinkType.new(@con)
     assert_equal false,linktype.internal_name?("blocks")
     assert_equal true, linktype.internal_name?("Cloners")
+  end
+  
+  def test_valid_names
+    singlelinktype = IssueLinkType.new(@con,"10000")
+    assert_equal "Blocks, is blocked by, blocks",singlelinktype.valid_names
+    linktype = IssueLinkType.new(@con)
+    assert_match /blocks, Cloners, is cloned by,/,linktype.valid_names
+    assert_match /blocks\nCloners\nis cloned by\n/,linktype.valid_names("\n")
     
   end
+
   
 end

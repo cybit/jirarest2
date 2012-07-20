@@ -15,11 +15,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "connect"
-require "services"
-require "issue"
-require "services/issuelinktype"
-require "exceptions"
+require_relative "../connect"
+require_relative "../services"
+require_relative "../issue"
+require_relative "issuelinktype"
+require_relative "../exceptions"
 
 #  This class is responsible for the Linking of Issues
 #  No real getter as of yet (I just didn't need it)
@@ -44,6 +44,13 @@ class IssueLink < Services
   end
   
   public
+  
+  #Show the possible answers for the issuelinktypes
+  # @return String
+  def valid_issuelinktypes(delimiter = ", ")
+    @linktype = IssueLinkType.new(@connection) if ! @issuelinktype
+    return @linktype.valid_names(delimiter)
+  end
 
   # Links two issues
   # Right now the visibility feature for comments is not supported
@@ -57,9 +64,9 @@ class IssueLink < Services
     outwardIssue = key(remoteIssue)
     
     # lets see if we have the right name
-    linktype = IssueLinkType.new(@connection)
-    if ! linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
-      realname = linktype.name(type)
+    @linktype = IssueLinkType.new(@connection)
+    if ! @linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
+      realname = @linktype.name(type)
       if realname.nil? then
         raise Jirarest2::ValueNotAllowedException, type 
       else

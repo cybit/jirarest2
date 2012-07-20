@@ -15,8 +15,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "connect"
-require "services"
+require "jirarest2/connect"
+require "jirarest2/services"
 
 #  Watchers do have their own calling
 class Watcher < Services
