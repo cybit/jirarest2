@@ -84,7 +84,7 @@ class ParseOptions
         issueopts.watchers = w
       end
       
-      opts.on("-l", "--link ISSUE=LINKTYPE", "Key of an Issue this issue should be linked to" ) do |l|
+      opts.on("-l", "--link ISSUEKEY=LINKTYPE", "Key of an Issue this issue should be linked to" ) do |l|
         issueopts.link = l
       end
       
@@ -340,7 +340,7 @@ def create_new_ticket(issue)
         linkresult = link.link(result["key"],remoteIssue,linktype)
       end
     rescue Jirarest2::ValueNotAllowedException => e
-      puts "Issuetype \"#{e.message}\" not valid."
+      puts "Link not created. Issuetype \"#{e.message}\" not valid."
       puts "Please use one of the these:"
       puts link.valid_issuelinktypes("\n")
       exit 1
