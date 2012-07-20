@@ -28,6 +28,7 @@ class IssueLink < Services
   def initialize(connection)
     @uritail = "issueLink"
     super(connection)
+    @linktype = IssueLinkType.new(@connection)
   end
 
   private
@@ -48,7 +49,6 @@ class IssueLink < Services
   #Show the possible answers for the issuelinktypes
   # @return String
   def valid_issuelinktypes(delimiter = ", ")
-    @linktype = IssueLinkType.new(@connection) if ! @issuelinktype
     return @linktype.valid_names(delimiter)
   end
 
@@ -64,7 +64,6 @@ class IssueLink < Services
     outwardIssue = key(remoteIssue)
     
     # lets see if we have the right name
-    @linktype = IssueLinkType.new(@connection)
     if ! @linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
       realname = @linktype.name(type)
       if realname.nil? then
