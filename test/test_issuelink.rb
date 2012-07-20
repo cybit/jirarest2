@@ -28,4 +28,8 @@ class TestIssueLink < MiniTest::Unit::TestCase
     assert "201",link.link_issue("MFTP-6","SP-3","is cloned by")
   end
   
+  def test_valid_issuelinktype
+    link = IssueLink.new(@con)
+    assert_match /blocks, Cloners, is cloned by,/,link.valid_issuelinktypes
+  end
 end

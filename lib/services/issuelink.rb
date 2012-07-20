@@ -44,6 +44,13 @@ class IssueLink < Services
   end
   
   public
+  
+  #Show the possible answers for the issuelinktypes
+  # @return String
+  def valid_issuelinktypes(delimiter = ", ")
+    @linktype = IssueLinkType.new(@connection) if ! @issuelinktype
+    return @linktype.valid_names(delimiter)
+  end
 
   # Links two issues
   # Right now the visibility feature for comments is not supported
@@ -57,9 +64,9 @@ class IssueLink < Services
     outwardIssue = key(remoteIssue)
     
     # lets see if we have the right name
-    linktype = IssueLinkType.new(@connection)
-    if ! linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
-      realname = linktype.name(type)
+    @linktype = IssueLinkType.new(@connection)
+    if ! @linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
+      realname = @linktype.name(type)
       if realname.nil? then
         raise Jirarest2::ValueNotAllowedException, type 
       else

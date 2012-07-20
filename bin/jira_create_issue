@@ -333,10 +333,17 @@ def create_new_ticket(issue)
     if ! watcherssuccess && @issueopts.watchers then
       puts "Watchers could not be set though."
     end
-    if @issueopts.link then
-      link = IssueLink.new(connection)
-      remoteIssue,linktype  = @issueopts.link.split("=")
-      linkresult = link.link(result["key"],remoteIssue,linktype)
+    begin
+      if @issueopts.link then
+        link = IssueLink.new(connection)
+        remoteIssue,linktype  = @issueopts.link.split("=")
+        linkresult = link.link(result["key"],remoteIssue,linktype)
+      end
+    rescue Jirarest2::ValueNotAllowedException => e
+      puts "Issuetype \"#{e.message}\" not valid."
+      puts "Please use one of the these:"
+      puts link.valid_issuelinktypes("\n")
+      exit 1
     end
     return 0
   elsif result["errors"] then

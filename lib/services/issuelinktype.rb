@@ -17,6 +17,25 @@
 
 require "services"
 
+# Lets try it by making one class for each issue link type and glue them together in a list
+class SingleIssueLinkType
+  # @return [String] Name of the Type
+  attr_reader :name
+  # @return [String] Name of the inward string
+  attr_reader :inward
+  # @return [String] Name of the outward string
+  attr_reader :outward
+
+  # @param [String] name The name of the IssueLinkType
+  # @param [String] inward The name used for inward links
+  # @param [String] outward The name used for outward links
+  def initialize(name,inward,outward)
+    @name = name
+    @inward = inward
+    @outward = outward
+  end
+end
+
 #  An IssueLinkType Object represents one or all IssueLinkTypes
 class IssueLinkType < Services
 
@@ -31,31 +50,23 @@ class IssueLinkType < Services
       @uritail = "issueLinkType/#{data}"
     end
     super(connection)
-    @all = get
+    extract_fields(get) # Build the SingleIssueLinkType classes
   end
 
 private
-
-  # do the search for each block
-  # @param [Hash] hash One LinkIssueType in a hash representation
-  # @param [String] uiname the way the linktype is shown in the browser
-  # @return [Array] Actual name oft the LinkIssueType
-  def name_block_search(hash,uiname)
-    name = nil
-    direction = nil
-    if ( hash["inward"] == uiname) then
-      direction = "inward"
-      name = hash["name"]
-      return name, direction
-    elsif (hash["outward"] == uiname) then
-      direction = "outward"
-      name = hash["name"]
-      return name, direction
-    else 
-      return nil # Save my butt
+  # Extract the fieldtypes from the Hash we got from the server
+  # As the server does not always return the same structure for single and multi instances we have to do some alignment
+  # @param [Hash] jiraresponse Hash built from the JSON JIRA(tm) returned to us
+  def extract_fields(jiraresponse)
+    @types = Hash.new
+    if jiraresponse["issueLinkTypes"].instance_of?(Array) then
+      jiraresponse["issueLinkTypes"].each{ |hash|
+        @types[hash["name"]] = SingleIssueLinkType.new(hash["name"],hash["inward"],hash["outward"])
+      }
+    else
+      @types[jiraresponse["name"]] = SingleIssueLinkType.new(jiraresponse["name"],jiraresponse["inward"],jiraresponse["outward"])
     end
   end
-
 
 public
 
@@ -63,29 +74,35 @@ public
   # @param [String] uiname the way the linktype is shown in the browser
   # @return [Array, nil] Array with the name and the direction ("inward" or "outward") if successfull , nil if not
   def name(uiname)
-    if @all["issueLinkTypes"].instance_of?(Array) then
-      @all["issueLinkTypes"].each{ |hash|
-        result =  name_block_search(hash,uiname)
-        return result if result # Return if we got an actual result
-      }
-    else
-      return name_block_search(@all,uiname)
-    end
-    return nil # Nothing found don't want to return @all
+    return uiname if @types.has_key?(uiname)  # If the name is already correct just bounce it back
+    @types.each { |name,singletype|
+      if singletype.inward == uiname then
+        return singletype.name, "inward"
+      elsif singletype.outward ==  uiname then
+        return singletype.name, "outward"
+      end
+    }
+    return nil # Nothing found don't want to return @all      
   end # name
 
   # Is the name realy the internal name we need to use?
   # @param [String] test String to test agains the names of IssueLinkTypes
   # @return [Boolean] 
   def internal_name?(test)
-    if @all["issueLinkTypes"].instance_of?(Array) then
-      @all["issueLinkTypes"].each{ |hash|
-        return true if ( hash["name"] == test)
-      }
-    else
-      return ( @all["name"] == test )
-    end
-    return false # Nothing found don't want to return @all
+    @types.has_key?(test)
+  end
+
+  # Return all valid issuetypefield entries that we now of
+  # @param [String] delimiter Delimiter for the output (if you want ", " or "\n" or ...)
+  # @return [String] All the valid answers
+  def valid_names(delimiter = ", ")
+    answer = Array.new
+    @types.each { |name,singletype|
+      answer << singletype.name
+      answer << singletype.inward
+      answer << singletype.outward
+    }
+    return answer.join(delimiter)
   end
 
 end #class
