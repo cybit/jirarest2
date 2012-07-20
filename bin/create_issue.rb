@@ -17,7 +17,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-puts "File has been renamed to jira_create_issue.rb"
-newfile = File.dirname($0) + "/jira_create_issue.rb"
+puts "File has been renamed to jira_create_issue"
+newfile = File.dirname($0) + "/jira_create_issue"
 puts "Please use: #{newfile} #{$*.join(" ")}"
 
