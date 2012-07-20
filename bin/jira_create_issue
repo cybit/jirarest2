@@ -28,7 +28,7 @@ require "highline/import"
 require "jirarest2"
 require "optparse"
 require "ostruct"
-require "madbitconfig"
+require "jirarest2/madbitconfig"
 require "uri"
 require "pp"
 

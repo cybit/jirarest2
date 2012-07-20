@@ -47,14 +47,14 @@ class Issue
     @issuetype = ""
     jhash["projects"].each { |value|
       @project = value["key"]
-      value["issuetypes"].each { |value|
-        @issuetype = value["name"]
-        value["fields"].delete("project") #The project key is duplicate and will make us live harder afterwards. It is marked as required but nothing happens if this key is not set.
-        value["fields"].each { |key,value|
+      value["issuetypes"].each { |value1|
+        @issuetype = value1["name"]
+        value1["fields"].delete("project") #The project key is duplicate and will make us live harder afterwards. It is marked as required but nothing happens if this key is not set.
+        value1["fields"].each { |key,value2|
           fields = Hash.new
           fields["id"] = key
-          if value["name"] then
-            name = value["name"]
+          if value2["name"] then
+            name = value2["name"]
           else
             name = key
           end
@@ -62,22 +62,22 @@ class Issue
           if value["allowedValues"] then
             # With custom fields the identifier is "value" with the built in ones it's "name"
             identifier = "name"
-            if value["schema"]["custom"] then
+            if value2["schema"]["custom"] then
               identifier = "value"
             end
             allowedValues = Array.new
-            value["allowedValues"].each { |value|
-              allowedValues << value[identifier]
-            }
+            value2["allowedValues"].each { |value3|
+              allowedValues << value3[identifier]
+            } # value3
             fields["allowedValuesIdentifier"] = identifier
             fields["allowedValues"] = allowedValues
           end
-          fields["required"] = value["required"] 
-          fields["type"] = value["schema"]["type"]
+          fields["required"] = value2["required"] 
+          fields["type"] = value2["schema"]["type"]
           @issuefields[name] = fields if name != "Issue Type" # "Issue Type" is not really a required field as we have to assign it at another place anyway
-        }
-      }
-    }
+        } # value1
+      } # value
+    } # jhash
   end
   
   # @param [String] field Name of the field

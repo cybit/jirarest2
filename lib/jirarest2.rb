@@ -19,10 +19,10 @@
 
 VERSION = "0.0.6"
 
-require_relative "connect"
-require_relative "issue"
-require_relative "credentials"
-require_relative "exceptions"
-require_relative "services/watcher"
-require_relative "services"
-require_relative "services/issuelink"
+require_relative "jirarest2/connect"
+require_relative "jirarest2/issue"
+require_relative "jirarest2/credentials"
+require_relative "jirarest2/exceptions"
+require_relative "jirarest2/services/watcher"
+require_relative "jirarest2/services"
+require_relative "jirarest2/services/issuelink"

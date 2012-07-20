@@ -1,6 +1,6 @@
 require "minitest/autorun"
-require "connect"
-require "credentials"
+require "jirarest2/connect"
+require "jirarest2/credentials"
 require "jirarest2/result"
 
 class TestResult < MiniTest::Unit::TestCase

@@ -15,7 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "services"
+require "jirarest2/services"
 
 # Lets try it by making one class for each issue link type and glue them together in a list
 class SingleIssueLinkType

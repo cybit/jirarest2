@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 require "minitest/autorun"
-require "credentials"
-require "connect"
-require "services/watcher"
+require "jirarest2/credentials"
+require "jirarest2/connect"
+require "jirarest2/services/watcher"
 
 class TestWatcher < MiniTest::Unit::TestCase
   def setup

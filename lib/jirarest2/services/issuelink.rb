@@ -15,11 +15,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "connect"
-require "services"
-require "issue"
-require "services/issuelinktype"
-require "exceptions"
+require_relative "../connect"
+require_relative "../services"
+require_relative "../issue"
+require_relative "issuelinktype"
+require_relative "../exceptions"
 
 #  This class is responsible for the Linking of Issues
 #  No real getter as of yet (I just didn't need it)
