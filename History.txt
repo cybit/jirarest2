@@ -1,3 +1,20 @@
+=== 0.0.7 / 2012-07-23
+
+* 2 major enhancements:
+
+  * Moved the library files all one directory down under lib/jirarest2/ and edited the requires fields accodringly. - closes #6
+  * jira_create_issue.rb moved yet again. Now to jira_create_issue - closes #8
+
+* 1 minor enhancement:
+
+  * rewrote issuelinktype
+
+* 3 bug fixes:
+
+  * Changed tests to WebMock. No more dependency to existing server fixes #16
+  * Changed the output to something more clear if the linktype is not correct. fixes #11
+  * It is now suficient to enter only -C - fixes #5
+
 === 0.0.6 / 2012-07-18
 
 * 1 minor enhancement:
