@@ -5,8 +5,8 @@ require "pp"
 class TestConfig < MiniTest::Unit::TestCase
 
   def test_read_configfile
-    testdir =  File.dirname($0)
-    testfile = testdir + "/test/data/test.config.data"
+    testdir =  File.dirname(__FILE__)
+    testfile = testdir + "/data/test.config.data"
     # Should work
     testdata = {"username"=>"UsErNaMe", "password"=>"pAsSw0rD;", "URL"=>"https://jira.localhost:2990/jira"}
     assert_equal testdata,MadbitConfig::read_configfile(testfile)
@@ -15,8 +15,8 @@ class TestConfig < MiniTest::Unit::TestCase
   end
 
   def test_write_configfile
-    testdir =  File.dirname($0)
-    testfile = testdir + "/test/data/test.config.tmp"
+    testdir =  File.dirname(__FILE__)
+    testfile = testdir + "/data/test.config.tmp"
     #make sure
     File.delete(testfile) if File.exists?(testfile) 
     #test
@@ -30,12 +30,12 @@ class TestConfig < MiniTest::Unit::TestCase
   end
 
   def test_readjfile
-    testdir = File.dirname($0)
-    testfile =  testdir + "/test/data/test.json"
+    testdir = File.dirname(__FILE__)
+    testfile =  testdir + "/data/test.json"
     assert_equal ["One", "Two", "Three", "Four"],MadbitConfig::read_configfile(testfile)["Many Values"]
-    testfile =  testdir + "/test/data/test.nojson"
+    testfile =  testdir + "/data/test.nojson"
     assert_equal " \\This is a summary. We prefer to use it, as is\\", MadbitConfig::read_configfile(testfile, true)["\\Summary\\ "] # Not really what we want but didn't know how to fix now
-    testfile =  testdir + "/test/data/test.nojson1"
+    testfile =  testdir + "/data/test.nojson1"
     assert_equal " One, Two, Three, Four",MadbitConfig::read_configfile(testfile, true)["Many Values "]
     
     # I dont' know how to run this test in a automated setup. How do we feed one of the files above to STDIN so the testscript gets the data?

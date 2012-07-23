@@ -24,7 +24,7 @@ Hoe.spec 'jirarest2' do
 
   extra_deps << ['json', ">= 1.6.0"]
   extra_deps << ['highline', ">= 1.1.0"]
-
+  extra_dev_deps << ['webmock', ">= 1.7.0"]
 
 #  self.yard_title = 'Jirarest2'
 #  self.yard_markup = :markdown
