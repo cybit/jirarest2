@@ -10,7 +10,7 @@ It is intended to be called within the shell to create and verify JIRA(tm) issue
 
 This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which required oauth authentification. 
 
-The script allows you to create new issues with watchers and link those to existing issues
+The script allows you to create new issues with watchers and link those to existing issues.
 
  *Use it at your own risk. Most of the API features are not implemented.*
 

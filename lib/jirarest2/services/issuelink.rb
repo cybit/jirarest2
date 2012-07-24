@@ -67,7 +67,7 @@ class IssueLink < Services
     if ! @linktype.internal_name?(type) then # time to find the correct name and see if we have to exchange tickets
       realname = @linktype.name(type)
       if realname.nil? then
-        raise Jirarest2::ValueNotAllowedException, type 
+        raise Jirarest2::ValueNotAllowedException.new(type,valid_issuelinktypes), type 
       else
         type = realname[0]
         if realname[1] == "inward" then # we have to change the issues as jira only knows one direction.

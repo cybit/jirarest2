@@ -1,3 +1,17 @@
+=== 0.0.8 / 2012-07-25
+
+* 1 minor enhancement:
+
+  * jira_create_issue : Extended the possibilities with the -C paramter. You can now just pass on the content data or use an extended JSON to add project, issue, watchers and links. See --help-C . fixes #9 fixes #10
+
+* 1 bug fix:
+
+  * Fixed #17 and added a test to catch that behaviour in the future
+
+* 1 unknown:
+
+  * Fixed bugs with mocked tests.
+
 === 0.0.7 / 2012-07-23
 
 * 2 major enhancements:

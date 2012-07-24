@@ -172,7 +172,7 @@ class Issue
   # @param [String] key Name of the field
   # @param [String] value Value to be checked
   def set_allowed_value(key,value)
-     if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
+    if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
       array = Array.new
       value.each {|item|
         if value_allowed?(key,item) then
