@@ -49,7 +49,7 @@ class Issue
       @project = value["key"]
       value["issuetypes"].each { |value1|
         @issuetype = value1["name"]
-        value1["fields"].delete("project") #The project key is duplicate and will make us live harder afterwards. It is marked as required but nothing happens if this key is not set.
+        value1["fields"].delete("project") #The project key is duplicate and will make our live harder afterwards. It is marked as required but nothing happens if this key is not set.
         value1["fields"].each { |key,value2|
           fields = Hash.new
           fields["id"] = key
@@ -59,7 +59,7 @@ class Issue
             name = key
           end
           # If the allowed reponses are limited we want to know them.
-          if value["allowedValues"] then
+          if value2["allowedValues"] then
             # With custom fields the identifier is "value" with the built in ones it's "name"
             identifier = "name"
             if value2["schema"]["custom"] then
@@ -160,8 +160,8 @@ class Issue
     if @issuefields[key]["allowedValues"].include?(value) 
       return true
     else
-      raise Jirarest2::ValueNotAllowedException, @issuefields[key]["allowedValues"]
-      puts "Value #{value} not allowed for field #{key}."
+#      puts "Value #{value} not allowed for field #{key}."
+      raise Jirarest2::ValueNotAllowedException.new(key, @issuefields[key]["allowedValues"]), value
     end
   end
 
@@ -172,7 +172,7 @@ class Issue
   # @param [String] key Name of the field
   # @param [String] value Value to be checked
   def set_allowed_value(key,value)
-    if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
+     if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
       array = Array.new
       value.each {|item|
         if value_allowed?(key,item) then

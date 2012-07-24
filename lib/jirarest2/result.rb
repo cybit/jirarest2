@@ -44,7 +44,7 @@ module Jirarest2
       @header = httpResponse.to_hash
       @body = httpResponse.body
       #pp @body
-      if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" then # If there is nothing in the body it would be hard to parse it.
+      if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" or httpResponse.body.nil? then # If there is nothing in the body it would be hard to parse it.
         @result = @body
       else
         @result = JSON.parse(@body)

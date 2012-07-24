@@ -293,15 +293,14 @@ def prepare_new_ticket
   rescue Jirarest2::WrongFieldnameException => e
     no_issue("field",e)
   rescue Jirarest2::ValueNotAllowedException => e
-    puts "Value #{split[1]} not allowed for field #{split[0]}."
-    puts "Please use one of: \"" + e.message.join("\", \"") + "\""
+    puts "Value #{e} not allowed for field #{e.fieldname}."
+    puts "Please use one of: \"" + e.allowed.join("\", \"") + "\""
     valueNotAllowedRaised = true
   end
-=begin
-}
-=end
+
   if valueNotAllowedRaised then
-    raise Jirarest2::ValueNotAllowedException
+    puts "Exiting before trying to create an issue."
+    exit 1
   end
   return issue
 end

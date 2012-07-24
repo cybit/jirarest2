@@ -43,7 +43,17 @@ module Jirarest2
   # There is no field with this name for the given issue type
   class WrongFieldnameException < ArgumentError; end
   # value is not allowed for this type of fields
-  class ValueNotAllowedException < ArgumentError; end
+  class ValueNotAllowedException < ArgumentError
+    # The name of the field the value does not match to
+    attr_reader :fieldname
+    # Matching values
+    attr_reader :allowed
+    
+    def initialize(fieldname,allowed)
+      @fieldname = fieldname
+      @allowed = allowed
+    end
+  end
   # A field that is defined as "required" has not been given a value
   class RequiredFieldNotSetException < ArgumentError; end
 
