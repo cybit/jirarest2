@@ -77,7 +77,7 @@ class Connect
       result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/
       raise Jirarest2::AuthentificationCaptchaError, $1
     when Net::HTTPNotFound
-      raise Jirarest2::NotFoundError, result
+      raise Jirarest2::NotFoundError, result.body
     end
     
     return Jirarest2::Result.new(result)

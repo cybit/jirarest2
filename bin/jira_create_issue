@@ -33,6 +33,39 @@ require "uri"
 require "pp"
 
 class ParseOptions
+  
+  #print to Variants of a JSON file that we both take in as input with -C
+  def self.print_json_input
+    fullExample = '{
+   "metadata":{
+      "project":"SP",
+      "issue":"Bug",
+      "link":{ "SP-13":"blocks" },
+      "watcher":["test","admin"]
+   },
+   "content":{
+      "Summary":"Your Summary",
+      "Priority":"Trivial"
+   }
+}'
+    smallExample = '{
+   "Summary" : "Your Summary",
+   "Priority" : "Trivial"
+}'
+    division = '--------------------------------------------------------'
+    puts division
+    puts "There are two ways you can input data via -C ."
+    puts "Here are two examples to build from. "
+    puts division
+    puts "Using the command line parameters -p, -i, -l and/or -w :"
+    puts smallExample
+    puts division
+    puts "Without the need for any other command line parameters:"
+    puts fullExample
+    puts '"watcher" always needs to be an array. No matter how many entries you got.'
+    puts "You can even mix command line and -C . In this case -C will take precendence." 
+  end
+
 
   def self.required_argument(name)
     puts "Argument \"#{name}\" is mandatory."
@@ -76,7 +109,7 @@ class ParseOptions
         issueopts.content = list
       end
       
-      opts.on("-C", "--content-file FILENAME", "JSON formatted file (or \"-\" for STDIN) with the contents of -c which will be ignored (Pipes work only if URL,username AND password are in the CONFIGFILE!)") do |contentfile|
+      opts.on("-C", "--content-file FILENAME", "JSON formatted file (or \"-\" for STDIN). The file can contain just -c or -c, -i and -p. (Pipes only work if URL,username AND password are in the CONFIGFILE!)") do |contentfile|
         scriptopts.contentfile = contentfile
       end
       
@@ -85,7 +118,7 @@ class ParseOptions
       end
       
       opts.on("-l", "--link ISSUEKEY=LINKTYPE", "Key of an Issue this issue should be linked to" ) do |l|
-        issueopts.link = l
+        scriptopts.linkdestkey, scriptopts.linktype = l.split("=")
       end
       
       opts.on("-F", "--field-seperator CHAR", "A fieldseperator if one of the fields is an array (Default \"|\")") do |fs|
@@ -121,6 +154,10 @@ class ParseOptions
         scriptopts.url = url
       end
 
+      opts.on_tail("--help-C", "Example input for -C") do
+        print_json_input
+        exit
+      end
       opts.on_tail("-h", "--help", "Display this screen") do
         puts opts
         exit
@@ -134,13 +171,6 @@ class ParseOptions
     
   
     opts.parse!(args)
-
-    if issueopts.project.nil? && scriptopts.writeconf.nil? then
-      required_argument("project")      
-    end
-    if issueopts.issue.nil? && scriptopts.writeconf.nil? then
-      required_argument("issue")
-    end
     return issueopts, scriptopts
   end #parse()
 
@@ -184,7 +214,6 @@ def get_credentials
   end
   @scriptopts.url = @scriptopts.url + "/rest/api/2/"
 
-
   if @scriptopts.pass.nil? && !( @scriptopts.username.nil?)  then
     @scriptopts.pass = get_password
   end
@@ -224,6 +253,12 @@ end
 =end
 def open_issue
   begin
+    if @issueopts.project.nil?  then
+      ParseOptions::required_argument("project")      
+    end
+    if @issueopts.issue.nil? then
+      ParseOptions::required_argument("issue")
+    end
     credentials = get_credentials
     issue=Issue.new(@issueopts.project,@issueopts.issue,get_connection)
   rescue Jirarest2::AuthentificationError => e
@@ -272,16 +307,37 @@ def split_content(issue)
   return fields
 end
 
+# interpret input from file or STDIN 
+def get_jsondata_from_file
+  data = MadbitConfig::read_configfile(@scriptopts.contentfile)
+  content = Hash.new
+  if  data["metadata"] then # We have metadata and content
+    content = data["content"]
+    pp "metadata"
+    @issueopts.project = data["metadata"]["project"] if data["metadata"]["project"]
+    @issueopts.issue = data["metadata"]["issue"] if data["metadata"]["issue"]
+    pp data["metadata"]["watcher"].class
+    pp data["metadata"]["watcher"]
+    @issueopts.watchers = data["metadata"]["watcher"] if data["metadata"]["watcher"]
+    pp data["metadata"]["link"]
+    @scriptopts.linkdestkey, @scriptopts.linktype = data["metadata"]["link"].flatten if data["metadata"]["link"]
+  else # We have the simple format that carries only the content
+    content = data
+  end
+  return content
+end
+
 #  Prepare a new ticket. It will not be persisted yet.
 def prepare_new_ticket
   begin
-    issue = open_issue
     if @scriptopts.contentfile then
       #Input from file or STDIN
       puts "Your Input now"
-      fields = MadbitConfig::read_configfile(@scriptopts.contentfile)
+      fields = get_jsondata_from_file
+      issue = open_issue
     else
       #Input from the command line
+      issue = open_issue
       fields =  split_content(issue)
     end
     valueNotAllowedRaised = false
@@ -333,15 +389,18 @@ def create_new_ticket(issue)
       puts "Watchers could not be set though."
     end
     begin
-      if @issueopts.link then
+      if @scriptopts.linkdestkey then
         link = IssueLink.new(connection)
-        remoteIssue,linktype  = @issueopts.link.split("=")
-        linkresult = link.link(result["key"],remoteIssue,linktype)
+        linkresult = link.link(result["key"],@scriptopts.linkdestkey,@scriptopts.linktype)
       end
     rescue Jirarest2::ValueNotAllowedException => e
       puts "Link not created. Issuetype \"#{e.message}\" not valid."
       puts "Please use one of the these:"
       puts link.valid_issuelinktypes("\n")
+      exit 1
+    rescue Jirarest2::NotFoundError => e
+      puts "Link not created. One of the issues not found. Jira says:"
+      puts e.to_s
       exit 1
     end
     return 0

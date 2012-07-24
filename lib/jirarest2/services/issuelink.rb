@@ -85,7 +85,6 @@ class IssueLink < Services
     json["inwardIssue"] = { "key" => inwardIssue }
     json["outwardIssue"] = { "key" => outwardIssue }
     json["comment"] = { "body" => comment}     if comment
-    
     return post(json)
   end
 
