@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+
+#    Copyright (C) 2012 Cyril Bitterich
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+require "jirarest2bin"
+require "pp"
+
+# Check for the minimum ruby version we need
+Jirarest2Bin::check_ruby_version
+
+class ParseOptions
+
+=begin
+  Parse the command line parameters
+  @return [Array] returns two hashes. The first one contains the options for the issue, the second one for the execution of the script
+=end
+  def self.parse(args)
+    issueopts = OpenStruct.new
+    scriptopts = OpenStruct.new
+    scriptopts.configfile = "~/.jiraconfig"
+    
+    opts = OptionParser.new do |opts|
+      opts.banner = "Usage: #{__FILE__} [options]"
+      scriptopts = Jirarest2Bin::defaultoptions(opts,scriptopts)
+
+      opts.on("-i", "--issue ISSUE,ISSUE,...", Array, "Issues to work on") do |i|
+        issueopts.issues = i
+      end
+
+      opts.on("-w", "--watcher USERNAME,USERNAME,...", Array, "Watchers to add") do |w|
+        issueopts.watchers = w
+      end
+      
+      opts.on("-c", "--command [command]",[:add,:remove,:view,:get,:set], "What to do with the watcher on the issues (add, remove,set)") do |c|
+        scriptopts.command = c
+      end
+
+      opts.on("-v", "--verbose", "Tell what I did in great detail") do |v|
+        scriptopts.verbose = v
+      end
+    end # OptionParser.new
+    
+    opts.parse!(args)
+    return issueopts, scriptopts
+    
+  end #parse
+end # class
+
+@issueopts, @scriptopts = ParseOptions.parse(ARGV)
+
+
+# Calls the issues and get the watchers of each issue in return.
+# It will then print those issues and their watchers to STDOUT 
+# @param [Array] issues An Array containing the issuekeys
+def view_watchers(issues)
+  connection = Jirarest2Bin::get_connection(@scriptopts,@connection)
+  issues.each { |issue|
+    connectedissue = Watcher.new(connection, issue)
+    watchers =  connectedissue.get_watchers
+    if watchers != [] then
+      puts "Issue #{issue} has the following watchers:"
+      watchers.each { |watcher| 
+        puts "#{watcher}"
+      }
+    else
+      puts "Issue #{issue} has no watchers."
+    end
+  }
+end
+
+# Calls the issues and runs the needed work on it with the given users by opening the connection to the server, looking for the issue identified by the key and executing the string
+# @param [Array] issues Issues to work with
+# @param [Array] users Users to work with
+# @param [Array] toto Kind of work to be done
+def work_watchers(issues,users,todo)
+  connection = Jirarest2Bin::get_connection(@scriptopts,@connection)
+  issues.each{ |issue|
+    connectedissue = Watcher.new(connection, issue)
+    method = todo + "_watcher" # the name of the method we want to call with send
+    users.each { |user|
+      connectedissue.send method, user
+      puts "Used #{todo} on Watcher #{user} to issue #{issue}" if @scriptopts.verbose 
+    }
+  }
+end
+
+if @scriptopts.writeconf then
+  Jirarest2Bin::write_configfile(@scriptopts)
+end
+
+Jirarest2Bin::required_argument("issue") if @issueopts.issues.nil?
+case @scriptopts.command
+when :add
+  Jirarest2Bin::required_argument("watcher") if @issueopts.watchers.nil?
+  work_watchers(@issueopts.issues,@issueopts.watchers,"add")
+when :remove
+  Jirarest2Bin::required_argument("watcher") if @issueopts.watchers.nil?
+  work_watchers(@issueopts.issues,@issueopts.watchers,"remove")
+when :set
+  puts "set is not implemented yet. If you want to give me a hint as to how I should do that please go to https://github.com/cybit/jirarest2/issues/18"
+when :view
+  view_watchers(@issueopts.issues)
+when :get
+  view_watchers(@issueopts.issues)
+else
+  puts "Don't know what to do. Please set -c"
+end
