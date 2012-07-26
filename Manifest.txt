@@ -7,6 +7,7 @@ Rakefile
 bin/create_issue.rb
 bin/jira_create_issue
 bin/jira_create_issue.rb
+bin/jira_watcher
 copyright
 lib/jirarest2.rb
 lib/jirarest2/connect.rb
@@ -19,6 +20,7 @@ lib/jirarest2/services.rb
 lib/jirarest2/services/issuelink.rb
 lib/jirarest2/services/issuelinktype.rb
 lib/jirarest2/services/watcher.rb
+lib/jirarest2bin.rb
 test/data/issuespec.txt
 test/data/test.config.data
 test/data/test.json

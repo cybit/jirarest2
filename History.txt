@@ -1,3 +1,14 @@
+=== 0.0.9 / 2012-07-27
+
+* 1 major enhancement:
+
+  * Refactored jira_create_issue. Moved some reusable code to new module Jirarest2Bin
+
+* 1 minor enhancement:
+
+  * Added new script jira_watcher to work with watchers closes #18 , closes #14
+
+
 === 0.0.8 / 2012-07-25
 
 * 1 minor enhancement:

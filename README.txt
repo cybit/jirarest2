@@ -8,9 +8,9 @@ jirarest2 is yet another implementation of the JIRA(tm) REST-API[https://develop
 
 It is intended to be called within the shell to create and verify JIRA(tm) issues fast without a browser. There was no particular need for perfomance at the time of writing.
 
-This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which required oauth authentification. 
+This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which requires oauth authentification. 
 
-The script allows you to create new issues with watchers and link those to existing issues.
+There are scripts to create new issues with watchers and link those to existing issues and to manipulate watchers on existing issues.
 
  *Use it at your own risk. Most of the API features are not implemented.*
 
@@ -20,11 +20,13 @@ The script allows you to create new issues with watchers and link those to exist
 == FEATURES/PROBLEMS:
 
    * Still in the alpha stages. The classes are still pretty volatile.
-   * The script allows you to create new issues with watchers and link those to existing issues
+   * jira_create_issue allows you to create new issues with watchers and link those to existing issues
+   * jira_watcher allows you to manipulate watchers on existing issues
 
 == SYNOPSIS:
 
 jira_create_issue -h
+jira_watcher -h
 
 == REQUIREMENTS:
 
