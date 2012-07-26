@@ -17,20 +17,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-
-if RUBY_VERSION < "1.9"
-  puts "Sorry, I need ruby 1.9.1 or higher!"
-  exit1
-end
-
-require "highline/import"
-require "jirarest2"
-require "optparse"
-require "ostruct"
-require "jirarest2/madbitconfig"
-require "uri"
+require "jirarest2bin"
 require "pp"
+
+# Check for the minimum ruby version we need
+Jirarest2Bin::check_ruby_version
 
 class ParseOptions
   
@@ -73,7 +64,7 @@ class ParseOptions
   end
 
 =begin
-  parse resturn two Hashes. The first one contains the options for the issue the second one the options for the execution of the script.
+  parse returns two Hashes. The first one contains the options for the issue the second one the options for the execution of the script.
 =end
   def self.parse(args)
     issueopts = OpenStruct.new
@@ -187,68 +178,6 @@ def no_issue(type,issue)
 end
 
 =begin
-  Get the password from an interactive shell
-=end
-def get_password
-  ask("Enter your password for user \"#{@scriptopts.username}\":  ") { |q| 
-    q.echo = "*" 
-  }
-end
-
-=begin
-  Gather all the credentials and build the credentials file
-=end
-def get_credentials
-  filefail = false
-  begin
-    fileconf = MadbitConfig::read_configfile(@scriptopts.configfile)
-    # We don't want to set the Values from the configfile if we have them already set.
-    @scriptopts.username = fileconf["username"] if ( @scriptopts.username.nil? && fileconf["username"] )
-    @scriptopts.pass = fileconf["password"] if ( @scriptopts.pass.nil? && fileconf["password"] )
-    if ( @scriptopts.url.nil? && fileconf["URL"] ) then
-      @scriptopts.url = fileconf["URL"] 
-    end
-  rescue IOError => e
-    puts e
-    filefail = false
-  end
-  @scriptopts.url = @scriptopts.url + "/rest/api/2/"
-
-  if @scriptopts.pass.nil? && !( @scriptopts.username.nil?)  then
-    @scriptopts.pass = get_password
-  end
-
-  missing = Array.new
-  missing << "URL"  if @scriptopts.url.nil?
-  missing << "username" if  @scriptopts.username.nil?
-#  missing << "password" if @scriptopts.pass.nil?
-  if  missing != [] then
-    puts "Missing essential parameter(s) #{missing.join(",")}. Exiting..."
-    exit 1
-  else
-    return Credentials.new(@scriptopts.url, @scriptopts.username, @scriptopts.pass)
-  end
-end
-
-=begin
- If there is already a conenction known returns that connection. If not or if the parameter is true it tries to create a new Connect object
-=end
-def get_connection(reconnect = false)
-  if ! @connection || reconnect then
-    begin
-      @connection = Connect.new(get_credentials)
-      @connection.heal_uri! # We want to be sure so we try to heal the connection_url if possible
-      return @connection
-    rescue Jirarest2::CouldNotHealURIError => e
-      puts "REST API not found at #{e.to_s}"
-      exit 3
-    end
-  else
-    return @connection
-  end
-end
-
-=begin
  create the issue on our side
 =end
 def open_issue
@@ -259,11 +188,10 @@ def open_issue
     if @issueopts.issue.nil? then
       ParseOptions::required_argument("issue")
     end
-    credentials = get_credentials
-    issue=Issue.new(@issueopts.project,@issueopts.issue,get_connection)
+    issue=Issue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
   rescue Jirarest2::AuthentificationError => e
     puts "Password not accepted."
-    @scriptopts.pass = get_password
+    @scriptopts.pass = Jirarest2Bin.get_password(@scriptopts.username)
     retry
   rescue Jirarest2::AuthentificationCaptchaError => e
     puts "Wrong Password too many times.\nCaptcha time at #{e.to_s} to reenable your account."
@@ -373,7 +301,7 @@ end
 =end
 def create_new_ticket(issue)
   begin
-    connection = get_connection # We need it so often in the next few lines that I prefer to get the result in a variable
+    connection = Jirarest2Bin::get_connection(@scriptopts,@connection) # We need it so often in the next few lines that I prefer to get the result in a variable
     result = issue.persist(connection).result
     # Set the watchers
     if @issueopts.watchers then
@@ -410,43 +338,12 @@ def create_new_ticket(issue)
   end
 end
 
-=begin
- called to write the config file
-=end
-def write_configfile
-  text = Hash.new
-  if @scriptopts.url.nil? then
-    text["#URL"] = "https://host.domain.com:port/path/"
-  else
-    text["URL"] = "#{@scriptopts.url}"
-  end
-  if @scriptopts.username.nil? then
-    text["#username"] = "USERNAME"
-  else
-    text["username"] = "#{@scriptopts.username}"
-  end
-  text["#password"] = "Your!PassW0rd"
-  begin
-    if @scriptopts.writeconf == :forcewrite then
-      MadbitConfig::write_configfile(@scriptopts.configfile,text,:force)
-    else
-      MadbitConfig::write_configfile(@scriptopts.configfile,text)
-    end
-    puts "Configfile written to #{@scriptopts.configfile}. Exiting."
-    exit 0
-  rescue MadbitConfig::FileExistsException => e
-    puts "Configfile #{e} already exists. Use \"--force-write-config-file\" to replace."
-    exit 1
-  end
-end
-
-
 # The "main function"
 if @scriptopts.show != [] then
   show_scheme
 end
 if @scriptopts.writeconf then
-  write_configfile
+  Jirarest2Bin::write_configfile(@scriptopts)
 end
 if ! (@scriptopts.contentfile.nil? and @issueopts.content.nil?) then # If there is no content set it makes no sense to try to build a ticket
   content = prepare_new_ticket
