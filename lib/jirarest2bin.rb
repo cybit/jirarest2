@@ -63,6 +63,14 @@ module Jirarest2Bin
     end
   end
   
+  # Output a message if a required argument is not set
+  # @param [String] name Name of the argument
+  def self.required_argument(name)
+    puts "Argument \"#{name}\" is mandatory."
+    exit 1
+  end
+
+
   # Get the password from an interactive shell
   # @param [String] username The Username to show
   # @return [String] the password as read from the command line
@@ -128,4 +136,59 @@ module Jirarest2Bin
     end
   end # get_connection
   
-end
+
+  # This method is here because I am to lazy to rewrite the options every time
+  # use it with scriptopts = Jirarest2Bin::defaultoptions(opts,scriptopts)
+  # fills out the part of the options we output every time
+  # @param [OptionParser] opts The OptionParser object we added before
+  # @param [Openstruct] scriptopts The Openstruct object that contains all the options relevant for the script
+  # @return [Openstruct] The same scriptopts but extended with the parameters set here.
+  def self.defaultoptions(opts,scriptopts)
+    #header
+    opts.separator ""
+
+    #tail
+    opts.on_tail("--config-file CONFIGFILE", "Config file containing the jira credentials. (Default: ~/.jiraconfig)") do |conffile|
+      scriptopts.configfile = conffile
+    end
+    
+    opts.on_tail("--write-config-file", "Writes the configfile with the data given if it does not alredy exist.") do |wc|
+      scriptopts.writeconf = :write
+    end
+    
+    opts.on_tail("--force-write-config-file", "Writes the configfile with the data given even if it does alredy exist.") do |wc|
+      scriptopts.writeconf = :forcewrite
+    end
+    
+    
+    opts.on_tail("-u", "--username USERNAME", "Your Jira Username if you don't want to use the one in the master file") do |u|
+      scriptopts.username = u 
+    end
+    
+    opts.on_tail("-H", "--jira-url URL", "URL to rest api (without \"/rest/api/2\").") do |url|
+      uri = URI(url)
+      splitURI = URI.split(url)
+      if splitURI[3] then
+        url = splitURI[0].to_s + "://" + splitURI[2].to_s + ":" + splitURI[3].to_s + splitURI[5].to_s
+      else
+        url = splitURI[0].to_s + "://" + splitURI[2].to_s + splitURI[5].to_s
+      end
+      scriptopts.url = url
+    end
+    
+    opts.on_tail("-h", "--help", "Display this screen") do
+      puts opts
+      exit
+    end
+    
+    opts.on_tail("--version", "Show version") do
+      puts OptionParser::Version.join(".")
+      exit
+    end
+    
+    return scriptopts
+  end #defaultoptions
+
+end # JiraRest2Bin
+
+

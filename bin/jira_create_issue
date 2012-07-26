@@ -58,11 +58,6 @@ class ParseOptions
   end
 
 
-  def self.required_argument(name)
-    puts "Argument \"#{name}\" is mandatory."
-    exit 1
-  end
-
 =begin
   parse returns two Hashes. The first one contains the options for the issue the second one the options for the execution of the script.
 =end
@@ -77,7 +72,6 @@ class ParseOptions
     
     opts = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} [options]"
-      opts.separator ""
       
       opts.on("-p", "--project PROJECT", "Projectname") do |p|
         issueopts.project = p
@@ -115,51 +109,15 @@ class ParseOptions
       opts.on("-F", "--field-seperator CHAR", "A fieldseperator if one of the fields is an array (Default \"|\")") do |fs|
         scriptopts.arrayseperator = fs
       end
-
       
-      opts.on("--config-file CONFIGFILE", "Config file containing the jira credentials. (Default: ~/.jiraconfig)") do |conffile|
-        scriptopts.configfile = conffile
-      end
-      
-      opts.on("--write-config-file", "Writes the configfile with the data given if it does not alredy exist.") do |wc|
-        scriptopts.writeconf = :write
-      end
-
-      opts.on("--force-write-config-file", "Writes the configfile with the data given even if it does alredy exist.") do |wc|
-        scriptopts.writeconf = :forcewrite
-      end
-      
-
-      opts.on("-u", "--username USERNAME", "Your Jira Username if you don't want to use the one in the master file") do |u|
-        scriptopts.username = u 
-      end
-      
-      opts.on("-H", "--jira-url URL", "URL to rest api (without \"/rest/api/2\").") do |url|
-        uri = URI(url)
-        splitURI = URI.split(url)
-        if splitURI[3] then
-          url = splitURI[0].to_s + "://" + splitURI[2].to_s + ":" + splitURI[3].to_s + splitURI[5].to_s
-        else
-          url = splitURI[0].to_s + "://" + splitURI[2].to_s + splitURI[5].to_s
-        end
-        scriptopts.url = url
-      end
-
       opts.on_tail("--help-C", "Example input for -C") do
         print_json_input
         exit
       end
-      opts.on_tail("-h", "--help", "Display this screen") do
-        puts opts
-        exit
-      end
+      #get the options we need every time
+      scriptopts = Jirarest2Bin::defaultoptions(opts,scriptopts)
       
-      opts.on_tail("--version", "Show version") do
-        puts OptionParser::Version.join(".")
-        exit
-      end
     end
-    
   
     opts.parse!(args)
     return issueopts, scriptopts
@@ -183,10 +141,10 @@ end
 def open_issue
   begin
     if @issueopts.project.nil?  then
-      ParseOptions::required_argument("project")      
+      Jirarest2Bin::required_argument("project")      
     end
     if @issueopts.issue.nil? then
-      ParseOptions::required_argument("issue")
+      Jirarest2Bin::required_argument("issue")
     end
     issue=Issue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
   rescue Jirarest2::AuthentificationError => e
