@@ -19,10 +19,14 @@
 module Jirarest2
   ## connections.rb
 
-  # Authentification failed 
+  # 400 - 
+  class BadRequestError < StandardError ; end
+  # 401 Authentification failed 
   class AuthentificationError < StandardError ; end
-  # Authentification failed and JIRA(tm) requires a login with captcha to continue
+  # 403 Authentification failed and JIRA(tm) requires a login with captcha to continue
   class AuthentificationCaptchaError < StandardError ; end
+  # 403 Authentification failed
+  class ForbiddenError < StandardError ; end
   # 404 - Results in HTML body - not JSON
   class NotFoundError < StandardError ; end
   # Could not heal URI

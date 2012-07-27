@@ -69,15 +69,19 @@ class Connect
     }
     # deal with output
     case result
-    when Net::HTTPUnauthorized #No login-credentials oder wrong ones.
+    when Net::HTTPBadRequest # 400
+      raise Jirarest2::BadRequestError, result.body
+    when Net::HTTPUnauthorized # 401 No login-credentials oder wrong ones.
       raise Jirarest2::AuthentificationError, result.body
-    when Net::HTTPForbidden #Captcha-Time
-      #      pp res.get_fields("x-authentication-denied-reason")
-      # Result: ["CAPTCHA_CHALLENGE; login-url=http://localhost:8080/login.jsp"]
-      result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/
-      raise Jirarest2::AuthentificationCaptchaError, $1
-    when Net::HTTPNotFound
+    when Net::HTTPForbidden # 403
+      if result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/ then #Captcha-Time
+        raise Jirarest2::AuthentificationCaptchaError, $1
+      else
+        raise Jirarest2::ForbiddenError, result.body
+      end
+    when Net::HTTPNotFound # 404
       raise Jirarest2::NotFoundError, result.body
+
     end
     
     return Jirarest2::Result.new(result)
@@ -90,7 +94,10 @@ class Connect
     begin 
       begin
         ret = (execute("Get","dashboard","").code == "200")
-      rescue Jirarest2::NotFoundError
+# TODO is the 404 really possible?
+      rescue Jirarest2::NotFoundError 
+        return false
+      rescue Jirarest2::BadRequestError
         return false
       end
     end

@@ -43,7 +43,7 @@ class TestWatcher < MiniTest::Unit::TestCase
   def test_add_watcher_success
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issue/SP-1/watchers").with(:body => "\"cebit\"",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 204, :headers => {})
     watchers = Watcher.new(@con, "SP-1")
-    assert true, watchers.add_watcher("cebit")
+    assert_equal true, watchers.add_watcher("cebit")
   end
 
 end

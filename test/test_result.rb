@@ -17,7 +17,9 @@ class TestResult < MiniTest::Unit::TestCase
 
   def test_code_400
     stub_request(:get, "http://test:1234@localhost:2990/jira/rest/api/2/issue/createmeta/").with(:headers => {'Content-Type'=>'application/json;charset=UTF-8'}).to_return(:status => 400, :body => "", :headers => {})
-    assert_equal "400", @con.execute("Get","issue/createmeta/","").code
+    assert_raises(Jirarest2::BadRequestError) { 
+      @con.execute("Get","issue/createmeta/","").code
+    }
   end
 
 
