@@ -20,13 +20,9 @@ class TestConnect < MiniTest::Unit::TestCase
   
   def test_executePOST
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/search/").with(:body => "{\"jql\":\"project = MFTP\",\"startAt\":0,\"maxResults\":4}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => '{"expand":"schema,names","startAt":0,"maxResults":4,"total":9,"issues":[{"expand":"editmeta,renderedFields,transitions,changelog,operations","id":"10102","self":"http://localhost:2990/jira/rest/api/2/issue/10102","key":"MFTP-9","fields":{"summary":"AnotherissueatSunJul1516","progress":{"progress":0,"total":0}}}]}', :headers => {})
-#    WebMock.disable!
 
     query={"jql"=>"project = MFTP", "startAt"=>0, "maxResults"=>4 }
     assert_equal 4, @con.execute("Post","search/",query).result["maxResults"]
-#   WebMock.enable!
-
-    pp @con.execute("Post","search/",query).result["maxResults"]
   end
 
   def test_check_uri_true

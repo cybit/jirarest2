@@ -28,7 +28,8 @@ class Services
   end
 
   # Send the GET request
-  # @param [Hash] data to be sent to Connection.execute
+  # @param [Hash,String] data to be sent to Connection.execute
+  # @return [Hash] The result as constructed by Connection.execute transformed from a json hash
   def get(data = "")
     return @connection.execute("Get",@uritail,data).result
   end
@@ -36,15 +37,23 @@ class Services
 
   # Send the POST request
   # @param [Hash] data to be sent to Connection.execute
+  # @return [Result] The result as constructed by Connection.execute
   def post(data = "")
     return @connection.execute("Post",@uritail,data)
-  end  
-
+  end
   
   # Send the DELETE request
   # @param [Hash] data to be sent to Connection.execute
+  # @return [Result] The result as constructed by Connection.execute
   def delete(data = "")
     return @connection.execute("Delete",@uritail,data)
+  end
+
+  # Send the PUT request
+  # @param [HASH] data to be sent to Connection.execute
+  # @return [Hash] The result as constructed by Connection.execute transformed from a json hash
+  def put(data = "")
+    return @connection.execute("Put",@uritail,data).result
   end
 
 end #class

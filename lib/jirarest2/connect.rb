@@ -44,9 +44,8 @@ class Connect
   def execute(operation,uritail,data)
     uri = nil
     uri = URI(@CONNECTURL+uritail)
-    
     if data != "" then
-      if operation != "Post" then # POST carries the payload in the body that's why we have to wait
+      if ! (operation == "Post" || operation == "Put") then # POST carries the payload in the body that's why we have to wait
         uri.query = URI.encode_www_form(data)
       end
     end
@@ -57,16 +56,18 @@ class Connect
     req["Content-Type"] = "application/json;charset=UTF-8"
 
     if data != "" then
-      if operation == "Post" then # POST carries the payload in the body
+      if (operation == "Post" || operation == "Put") then # POST and PUT carry the payload in the body
         @payload = data.to_json
         req.body = @payload
       end
     end
     
+
     # Ask the server
     result = Net::HTTP.start(uri.host, uri.port) {|http|
       http.request(req)
     }
+
     # deal with output
     case result
     when Net::HTTPBadRequest # 400

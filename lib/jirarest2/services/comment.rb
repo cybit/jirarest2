@@ -1,4 +1,4 @@
-# Watcher class
+# Comment class
 #    Copyright (C) 2012 Cyril Bitterich
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,46 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+require "time"
 require "jirarest2/connect"
 require "jirarest2/services"
 
-#  Watchers do have their own calling
+#TODO give nicer answers in return to work
+
+# One single Comment
+# TODO Maybe rewrite the initalize and then get a few other parameters like the issue-id or the comment-id
+class CommentElement 
+  #The author of the comment
+  # @return [String]
+  attr_reader :author
+  #text of the comment
+  # @return [String]
+  attr_reader :text
+  #creation date
+  # @return [Time]
+  attr_reader :cdate
+  #last modify date
+  # @return [Time]
+  attr_reader :mdate
+
+  # create one instance of an Comment
+  # @param [String] author (Last) author of the comment
+  # @param [String] text Text of the comment
+  # @param [Time,String] cdate Creation date of the comment
+  # @param [Time,String] mdate Date of last change to the comment
+  def  initialize(author,text,cdate = Time.now,mdate = Time.now)
+    @author = author
+    @text = text
+    #  parse time if needed
+    cdate = Time.parse(cdate) if cdate.instance_of?(String)
+    @cdate = cdate
+    mdate = Time.parse(mdate) if mdate.instance_of?(String)
+    @mdate = mdate
+  end
+end
+
 class Comment < Services
+#TODO See to documentation for "DELETE" as we use the superclass here and it will not be shown
 
   #  Set our uritail
   # @param [Connection] connection 
@@ -35,48 +70,49 @@ class Comment < Services
 
   # Add a comment to an issue
   # @param [String] text to add
+  # @return [Result] The result as constructed by Connection.execute
   def add(text)
     post({"body" => text})
   end
-  
-  # Return all the watchers of the issue
-  # @return [String] Usernames of watching users
-  def get_watchers
-    ret = get
-    watchers = Array.new
-    ret["watchers"].each { |entry|
-      watchers << entry["name"]
-    }
-    return watchers
-  end
-  
 
-  # Adds a new watcher for the issue
-  # @param [String] username Username of the new watcher
-  # @return [Boolean] Success
-  def add_watcher(username)
-    ret = post(username)
-    case ret.code
-    when "204"
-      return true
+  # Split the returned hash and fill the CommentElement
+  # @param [Hash] result The json based hash of one Comment
+  # @return [CommentElement] One comment
+  private
+  def create_element(result)
+    text = result["body"]
+    author = result["updateAuthor"]["displayName"]
+    ctime = result["created"]
+    mtime = result["updated"]
+    return CommentElement.new(author,text,ctime,mtime)          
+  end
+
+  public
+  # Get a certain comment
+  # @param [String] data Additional data to send via GET
+  # @return [Nil] If there is no comment in the Project
+  # @return [Array(CommentElement)] If there is one or more than one result - TODO See if this is going to be changed for a special type that keeps startAt, maxResults and total
+  def get(data = "")
+    result = super("")
+    if result["comments"].nil? then
+      return [create_element(result)]
+    elsif result["comments"].empty? then
+      return nil
     else
-      return false
+      resultarray = Array.new
+      result["comments"].each { |singleresult|
+         resultarray << create_element(singleresult)
+      }
+      return resultarray
     end
   end
-
-
-  # remove one watcher from the issue
-  # @param [String] username Username of the watcher to delete
-  # @return [Boolean] Success
-  def remove_watcher(username)
-    query = {"username" => username}
-    ret = delete(query)
-    case ret.code # Have to decide what to do here (Work with exceptions or with the case block)
-    when "204"
-      return true
-    else
-      false
-    end
+  
+  # Update an comment
+  # @param [String] text The new text for the comment
+  # @return [CommentElement] The new comment
+  def update(text)
+    result =  put({"body" => text})
+    return CommentElement.new(result["updateAuthor"]["displayName"], result["body"], result["created"], result["updated"])
   end
-
-end
+    
+end # Comment
