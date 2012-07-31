@@ -5,6 +5,7 @@ Manifest.txt
 README.txt
 Rakefile
 bin/create_issue.rb
+bin/jira_comment
 bin/jira_create_issue
 bin/jira_create_issue.rb
 bin/jira_watcher
@@ -17,16 +18,19 @@ lib/jirarest2/issue.rb
 lib/jirarest2/madbitconfig.rb
 lib/jirarest2/result.rb
 lib/jirarest2/services.rb
+lib/jirarest2/services/comment.rb
 lib/jirarest2/services/issuelink.rb
 lib/jirarest2/services/issuelinktype.rb
 lib/jirarest2/services/watcher.rb
 lib/jirarest2bin.rb
+test/data/get-comments.txt
 test/data/issuespec.txt
 test/data/test.config.data
 test/data/test.json
 test/data/test.nojson
 test/data/test.nojson1
 test/data/ticket.json
+test/test_comment.rb
 test/test_connect.rb
 test/test_credentials.rb
 test/test_issue.rb

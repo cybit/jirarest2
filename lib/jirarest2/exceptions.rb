@@ -29,6 +29,8 @@ module Jirarest2
   class ForbiddenError < StandardError ; end
   # 404 - Results in HTML body - not JSON
   class NotFoundError < StandardError ; end
+  # 405 - Method not allowed
+  class MethodNotAllowedError < StandardError ; end
   # Could not heal URI
   class CouldNotHealURIError < StandardError ; end
   

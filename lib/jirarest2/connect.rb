@@ -75,14 +75,15 @@ class Connect
     when Net::HTTPUnauthorized # 401 No login-credentials oder wrong ones.
       raise Jirarest2::AuthentificationError, result.body
     when Net::HTTPForbidden # 403
-      if result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/ then #Captcha-Time
+      if result.get_fields("x-authentication-denied-reason") && result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/ then #Captcha-Time
         raise Jirarest2::AuthentificationCaptchaError, $1
       else
         raise Jirarest2::ForbiddenError, result.body
       end
     when Net::HTTPNotFound # 404
       raise Jirarest2::NotFoundError, result.body
-
+    when Net::HTTPMethodNotAllowed # 405
+      raise Jirarest2::MethodNotAllowedError, result.body
     end
     
     return Jirarest2::Result.new(result)
