@@ -146,7 +146,7 @@ def open_issue
     if @issueopts.issue.nil? then
       Jirarest2Bin::required_argument("issue")
     end
-    issue=Issue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
+    issue=NewIssue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
   rescue Jirarest2::AuthentificationError => e
     puts "Password not accepted."
     @scriptopts.pass = Jirarest2Bin.get_password(@scriptopts.username)

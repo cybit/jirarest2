@@ -21,6 +21,7 @@ VERSION = "0.0.9"
 
 require_relative "jirarest2/connect"
 require_relative "jirarest2/issue"
+require_relative "jirarest2/newissue"
 require_relative "jirarest2/credentials"
 require_relative "jirarest2/exceptions"
 require_relative "jirarest2/services/watcher"

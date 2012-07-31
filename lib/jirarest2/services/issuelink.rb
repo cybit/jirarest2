@@ -37,7 +37,7 @@ class IssueLink < Services
   # @param [String, Issue] issue
   # @return [String]
   def key(issue)
-    if issue.instance_of?(Issue) then
+    if issue.instance_of?(NewIssue) then
       return issue.issuekey 
     else 
       return issue

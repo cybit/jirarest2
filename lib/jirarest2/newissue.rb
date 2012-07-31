@@ -18,7 +18,7 @@
 =begin
 # An Issue object contains all the data of an issue
 =end
-class Issue
+class NewIssue
     
   # issue type of the issue 
   attr_reader :issuetype
