@@ -122,7 +122,7 @@ def work(issues,text,method,id = nil)
   connection = Jirarest2Bin::get_connection(@scriptopts,@connection)
   issues.each{ |issue|
     connectedissue = Comment.new(connection, issue, id)
-    pp connectedissue.send method, text
+    connectedissue.send method, text
     if @scriptopts.verbose then
       if id.nil? then
         puts "Used #{method} on issue #{issue}" 

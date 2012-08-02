@@ -199,13 +199,9 @@ def get_jsondata_from_file
   content = Hash.new
   if  data["metadata"] then # We have metadata and content
     content = data["content"]
-    pp "metadata"
     @issueopts.project = data["metadata"]["project"] if data["metadata"]["project"]
     @issueopts.issue = data["metadata"]["issue"] if data["metadata"]["issue"]
-    pp data["metadata"]["watcher"].class
-    pp data["metadata"]["watcher"]
     @issueopts.watchers = data["metadata"]["watcher"] if data["metadata"]["watcher"]
-    pp data["metadata"]["link"]
     @scriptopts.linkdestkey, @scriptopts.linktype = data["metadata"]["link"].flatten if data["metadata"]["link"]
   else # We have the simple format that carries only the content
     content = data
