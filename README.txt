@@ -22,11 +22,13 @@ There are scripts to create new issues with watchers and link those to existing 
    * Still in the alpha stages. The classes are still pretty volatile.
    * jira_create_issue allows you to create new issues with watchers and link those to existing issues
    * jira_watcher allows you to manipulate watchers on existing issues
+   * jira_comment allows you to add read and update comments. (The latter only if you know the right comment id)
 
 == SYNOPSIS:
 
 jira_create_issue -h
 jira_watcher -h
+jira_comment -h
 
 == REQUIREMENTS:
 

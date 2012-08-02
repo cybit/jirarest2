@@ -1,3 +1,13 @@
+=== 0.0.10 / 2012-08-02
+
+* 1 major enhancement:
+
+  * Added exceptions for return code 400 and 400 in the main executer
+
+* 1 minor enhancements:
+
+  * Added jira_comment to work with comments. It's not very nice to errors and there might be some work with. This fixes #12
+
 === 0.0.9 / 2012-07-27
 
 * 1 major enhancement:
