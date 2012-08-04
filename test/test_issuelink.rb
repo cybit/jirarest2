@@ -8,7 +8,7 @@ require "webmock/minitest"
 
 class TestIssueLink < MiniTest::Unit::TestCase
   def setup
-    cred = Credentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
+    cred = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)
     stub_request(:get, "http://test:1234@localhost:2990/jira/rest/api/2/issueLinkType").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => '{"issueLinkTypes":[{"id":"10000","name":"Blocks","inward":"is blocked by","outward":"blocks","self":"http://localhost:2990/jira/rest/api/2/issueLinkType/10000"},{"id":"10001","name":"Cloners","inward":"is cloned by","outward":"clones","self":"http://localhost:2990/jira/rest/api/2/issueLinkType/10001"},{"id":"10002","name":"Duplicate","inward":"is duplicated by","outward":"duplicates","self":"http://localhost:2990/jira/rest/api/2/issueLinkType/10002"},{"id":"10003","name":"Relates","inward":"relates to","outward":"relates to","self":"http://localhost:2990/jira/rest/api/2/issueLinkType/10003"}]}', :headers => {})
     @link = IssueLink.new(@con)
@@ -18,7 +18,7 @@ class TestIssueLink < MiniTest::Unit::TestCase
   def test_link_issue_access
     # check for right to link.
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issueLink").with(:body => "{\"type\":{\"name\":\"Blocks\"},\"inwardIssue\":{\"key\":\"MFTP-6\"},\"outwardIssue\":{\"key\":\"SP-2\"}}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 401, :body => '{"errorMessages":["No Link Issue Permission for issue \'MFTP-6\'"],"errors":{}}', :headers => {})
-    assert_raises(Jirarest2::AuthentificationError) {
+    assert_raises(Jirarest2::AuthenticationError) {
       @link.link_issue("MFTP-6","SP-2","Blocks")
     }
   end

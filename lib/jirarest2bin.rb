@@ -49,6 +49,11 @@ module Jirarest2Bin
       text["username"] = "#{scriptopts.username}"
     end
     text["#password"] = "Your!PassW0rd"
+    if scriptopts.nocookieauth.nil? || scriptopts.nocookieauth then
+      text["nocookieauth"] = "false"
+    else
+      text["nocookieauth"] = "true"
+    end
     begin
       if scriptopts.writeconf == :forcewrite then
         MadbitConfig::write_configfile(scriptopts.configfile,text,:force)
@@ -100,18 +105,23 @@ module Jirarest2Bin
     end
     scriptopts.url = scriptopts.url + "/rest/api/2/"
     
-    if scriptopts.pass.nil? && !( scriptopts.username.nil?)  then
-      scriptopts.pass = Jirarest2Bin::get_password(scriptopts.username)
-    end
-    
     missing = Array.new
     missing << "URL"  if scriptopts.url.nil?
     missing << "username" if  scriptopts.username.nil?
     if  missing != [] then
       puts "Missing essential parameter(s) #{missing.join(",")}. Exiting..."
       exit 1
+    end
+
+    if !scriptopts.nocookieauth then 
+      credentials = CookieCredentials.new(scriptsopts.url,true)
+      credentials.load_cookiejar
+      # TODO What to do if the cookie expired?
     else
-      return Credentials.new(scriptopts.url, scriptopts.username, scriptopts.pass)
+      if scriptopts.pass.nil? && !( scriptopts.username.nil?)  then
+        scriptopts.pass = Jirarest2Bin::get_password(scriptopts.username)
+      end
+      return PasswordCredentials.new(scriptopts.url, scriptopts.username, scriptopts.pass)
     end
   end # get_credentials
 
@@ -161,7 +171,7 @@ module Jirarest2Bin
     end
     
     
-    opts.on_tail("-u", "--username USERNAME", "Your Jira Username if you don't want to use the one in the master file") do |u|
+    opts.on_tail("-u", "--username USERNAME", "Your Jira Username if it is not the one in the master file") do |u|
       scriptopts.username = u 
     end
     
@@ -176,6 +186,10 @@ module Jirarest2Bin
       scriptopts.url = url
     end
     
+    opts.on_tail("--no-cookie", "Don't try to authenticate via cookies") do |nocookie|
+      scriptopts.nocookieauth = true
+    end
+
     opts.on_tail("-h", "--help", "Display this screen") do
       puts opts
       exit

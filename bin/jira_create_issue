@@ -147,11 +147,11 @@ def open_issue
       Jirarest2Bin::required_argument("issue")
     end
     issue=Issue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
-  rescue Jirarest2::AuthentificationError => e
+  rescue Jirarest2::AuthenticationError => e
     puts "Password not accepted."
     @scriptopts.pass = Jirarest2Bin.get_password(@scriptopts.username)
     retry
-  rescue Jirarest2::AuthentificationCaptchaError => e
+  rescue Jirarest2::AuthenticationCaptchaError => e
     puts "Wrong Password too many times.\nCaptcha time at #{e.to_s} to reenable your account."
     exit 1
   rescue Jirarest2::WrongProjectException => e

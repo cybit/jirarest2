@@ -29,9 +29,7 @@ class Connect
 # Create an instance of Connect.
 # @param [Credentials] credentials
   def initialize(credentials)
-    @pass = credentials.password
-    @user = credentials.username
-    @CONNECTURL = credentials.connecturl
+    @credentials = credentials
   end
 
   
@@ -43,7 +41,7 @@ class Connect
 # @return [Jirarest2::Result]
   def execute(operation,uritail,data)
     uri = nil
-    uri = URI(@CONNECTURL+uritail)
+    uri = URI(@credentials.connecturl+uritail)
     if data != "" then
       if ! (operation == "Post" || operation == "Put") then # POST carries the payload in the body that's why we have to wait
         uri.query = URI.encode_www_form(data)
@@ -51,8 +49,10 @@ class Connect
     end
     
     req = nil
-    req = Net::HTTP::const_get(operation).new(uri.request_uri) # "Classes Are Just Obejects, Too" (Design Patterns in Ruby, Russ Olsen, Addison Wessley)
-    req.basic_auth @user, @pass
+    req = Net::HTTP::const_get(operation).new(uri.request_uri) 
+    # Authentication Header is built up in a credential class
+    @credentials.get_auth_header(req)
+
     req["Content-Type"] = "application/json;charset=UTF-8"
 
     if data != "" then
@@ -67,16 +67,15 @@ class Connect
     result = Net::HTTP.start(uri.host, uri.port) {|http|
       http.request(req)
     }
-
     # deal with output
     case result
     when Net::HTTPBadRequest # 400
       raise Jirarest2::BadRequestError, result.body
     when Net::HTTPUnauthorized # 401 No login-credentials oder wrong ones.
-      raise Jirarest2::AuthentificationError, result.body
+      raise Jirarest2::AuthenticationError, result.body
     when Net::HTTPForbidden # 403
       if result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/ then #Captcha-Time
-        raise Jirarest2::AuthentificationCaptchaError, $1
+        raise Jirarest2::AuthenticationCaptchaError, $1
       else
         raise Jirarest2::ForbiddenError, result.body
       end
@@ -84,8 +83,9 @@ class Connect
       raise Jirarest2::NotFoundError, result.body
 
     end
-    
-    return Jirarest2::Result.new(result)
+    ret = Jirarest2::Result.new(result)
+    @credentials.bake_cookies(ret.header["set.cookie"]) if @credentials.instance_of?(CookieCredentials)  # Make sure cookies are always up to date if we use them.
+    return ret
   end # execute
 
 
@@ -107,7 +107,7 @@ class Connect
 # Try to be nice. Parse the URI and see if you can find a pattern to the problem
 # @param [String] url
 # @return [String] a fixed URL
-  def heal_uri(url = @CONNECTURL)
+  def heal_uri(url = @credentials.connecturl)
     splitURI = URI.split(url) # [Scheme,Userinfo,Host,Port,Registry,Path,Opaque,Query,Fragment]
     splitURI[5].gsub!(/^(.*)2$/,'\12/')
     splitURI[5].gsub!(/\/+/,'/') # get rid of duplicate /
@@ -127,12 +127,12 @@ class Connect
 # @return [String,Jirarest2::CouldNotHealURIError] Fixed URL or Exception
  def heal_uri!
    if ! check_uri then
-     @CONNECTURL = heal_uri(@CONNECTURL)
+     @credentials.connecturl = heal_uri(@credentials.connecturl)
    end
    if check_uri then
-     return @CONNECTURL
+     return @credentials.connecturl
    else
-     raise Jirarest2::CouldNotHealURIError, @CONNECTURL
+     raise Jirarest2::CouldNotHealURIError, @credentials.connecturl
    end
  end
 

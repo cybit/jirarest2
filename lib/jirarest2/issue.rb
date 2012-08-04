@@ -233,7 +233,7 @@ class Issue
   # Set the watchers for this Ticket
   # @param [Connection] connection
   # @param [Array] watchers Watchers to be added
-  # @return [Boolean] True if successfull for all
+  # @return [Boolean] True if successful for all
   def add_watchers(connection,watchers)
     success = false # Return whether we were successful with the watchers
     watch = Watcher.new(connection,@issuekey)

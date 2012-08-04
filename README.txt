@@ -8,7 +8,7 @@ jirarest2 is yet another implementation of the JIRA(tm) REST-API[https://develop
 
 It is intended to be called within the shell to create and verify JIRA(tm) issues fast without a browser. There was no particular need for perfomance at the time of writing.
 
-This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which requires oauth authentification. 
+This implementation is still a for cry from others like http://rubygems.org/gems/jira-ruby which requires oauth authentication. 
 
 There are scripts to create new issues with watchers and link those to existing issues and to manipulate watchers on existing issues.
 

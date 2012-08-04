@@ -1,4 +1,4 @@
-# Jirarest2 is a gem to connect to the REST interface of JIRA(tm) . It uses Basic authentification and not oauth
+# Jirarest2 is a gem to connect to the REST interface of JIRA(tm) . It uses Basic authentication and not oauth
 
 
 #    Copyright (C) 2012 Cyril Bitterich
@@ -22,6 +22,8 @@ VERSION = "0.0.10"
 require_relative "jirarest2/connect"
 require_relative "jirarest2/issue"
 require_relative "jirarest2/credentials"
+require_relative "jirarest2/password_credentials"
+require_relative "jirarest2/cookie_credentials"
 require_relative "jirarest2/exceptions"
 require_relative "jirarest2/services/watcher"
 require_relative "jirarest2/services"
