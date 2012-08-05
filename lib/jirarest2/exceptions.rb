@@ -23,6 +23,10 @@ module Jirarest2
   class BadRequestError < StandardError ; end
   # 401 Authentication failed 
   class AuthenticationError < StandardError ; end
+  # 401 Authentication failed with password authentication
+  class PasswordAuthenticationError < AuthenticationError ; end
+  # 401 Authentication failed with cookie authentication
+  class CookieAuthenticationError < AuthenticationError ; end
   # 403 Authentication failed and JIRA(tm) requires a login with captcha to continue
   class AuthenticationCaptchaError < StandardError ; end
   # 403 Forbidden

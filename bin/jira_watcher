@@ -17,7 +17,7 @@
 
 
 require "jirarest2bin"
-require "pp"
+require "deb"
 
 # Check for the minimum ruby version we need
 Jirarest2Bin::check_ruby_version
@@ -67,7 +67,7 @@ end # class
 # It will then print those issues and their watchers to STDOUT 
 # @param [Array] issues An Array containing the issuekeys
 def view_watchers(issues)
-  connection = Jirarest2Bin::get_connection(@scriptopts,@connection)
+  connection =  Jirarest2Bin::command(@scriptopts,@connection,:connection)
   issues.each { |issue|
     connectedissue = Watcher.new(connection, issue)
     watchers =  connectedissue.get_watchers
@@ -87,7 +87,7 @@ end
 # @param [Array] users Users to work with
 # @param [Array] toto Kind of work to be done
 def work_watchers(issues,users,todo)
-  connection = Jirarest2Bin::get_connection(@scriptopts,@connection)
+  connection =  Jirarest2Bin::command(@scriptopts,@connection,:connection)
   issues.each{ |issue|
     connectedissue = Watcher.new(connection, issue)
     method = todo + "_watcher" # the name of the method we want to call with send

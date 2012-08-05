@@ -18,7 +18,7 @@
 #
 
 require "jirarest2bin"
-require "pp"
+require "deb"
 
 # Check for the minimum ruby version we need
 Jirarest2Bin::check_ruby_version
@@ -146,14 +146,7 @@ def open_issue
     if @issueopts.issue.nil? then
       Jirarest2Bin::required_argument("issue")
     end
-    issue=Issue.new(@issueopts.project,@issueopts.issue,Jirarest2Bin::get_connection(@scriptopts,@connection))
-  rescue Jirarest2::AuthenticationError => e
-    puts "Password not accepted."
-    @scriptopts.pass = Jirarest2Bin.get_password(@scriptopts.username)
-    retry
-  rescue Jirarest2::AuthenticationCaptchaError => e
-    puts "Wrong Password too many times.\nCaptcha time at #{e.to_s} to reenable your account."
-    exit 1
+    @connection,issue =  Jirarest2Bin::command(@scriptopts,@connection,:issue,@issueopts.project,@issueopts.issue)
   rescue Jirarest2::WrongProjectException => e
     no_issue("project",e)
   rescue Jirarest2::WrongIssuetypeException => e
@@ -255,7 +248,9 @@ end
 =end
 def create_new_ticket(issue)
   begin
-    connection = Jirarest2Bin::get_connection(@scriptopts,@connection) # We need it so often in the next few lines that I prefer to get the result in a variable
+#    connection = Jirarest2Bin::get_connection(@scriptopts,@connection) # We need it so often in the next few lines that I prefer to get the result in a variable
+    connection = Jirarest2Bin::command(@scriptopts,@connection,:connection)
+    
     result = issue.persist(connection).result
     # Set the watchers
     if @issueopts.watchers then

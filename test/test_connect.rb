@@ -1,6 +1,7 @@
 require "minitest/autorun"
 require "jirarest2/connect"
-require "jirarest2/credentials"
+require "jirarest2/password_credentials"
+require "jirarest2/cookie_credentials"
 require "webmock/minitest"
 
 class TestConnect < MiniTest::Unit::TestCase

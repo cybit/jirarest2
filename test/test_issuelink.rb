@@ -18,7 +18,7 @@ class TestIssueLink < MiniTest::Unit::TestCase
   def test_link_issue_access
     # check for right to link.
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issueLink").with(:body => "{\"type\":{\"name\":\"Blocks\"},\"inwardIssue\":{\"key\":\"MFTP-6\"},\"outwardIssue\":{\"key\":\"SP-2\"}}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 401, :body => '{"errorMessages":["No Link Issue Permission for issue \'MFTP-6\'"],"errors":{}}', :headers => {})
-    assert_raises(Jirarest2::AuthenticationError) {
+    assert_raises(Jirarest2::PasswordAuthenticationError) {
       @link.link_issue("MFTP-6","SP-2","Blocks")
     }
   end

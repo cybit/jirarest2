@@ -2,7 +2,7 @@ require "minitest/autorun"
 require "jirarest2/cookie_credentials"
 require "net/http"
 require "webmock/minitest"
-require "pp"
+require "deb"
 
 class TestCookieCredentials < MiniTest::Unit::TestCase
   
@@ -39,7 +39,7 @@ class TestCookieCredentials < MiniTest::Unit::TestCase
   
   def test_login_failed
     stub_request(:post, "http://test:12345@localhost:2990/jira/rest/auth/latest/session").with(:body => "{\"username\":\"test\",\"password\":\"12345\"}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 401, :body => "", :headers => {})    
-    assert_raises(Jirarest2::AuthenticationError) {
+    assert_raises(Jirarest2::PasswordAuthenticationError) {
       @cred.login("test","12345")
     }
   end

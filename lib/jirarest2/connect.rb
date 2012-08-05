@@ -19,26 +19,28 @@
 require 'net/http'
 require 'jirarest2/exceptions'
 require 'jirarest2/result'
-require "pp"
+require "deb"
 
 
 
 # A Connect object encasulates the connection to jira via REST. It takes an Credentials object and returns a Jirarest2::Result object or an exception if something went wrong.
 class Connect
-  
-# Create an instance of Connect.
-# @param [Credentials] credentials
+  # Get the credentials
+  attr_reader :credentials
+
+  # Create an instance of Connect.
+  # @param [Credentials] credentials
   def initialize(credentials)
     @credentials = credentials
   end
 
   
 
-# Execute the request
-# @param [String, "Get", "Post", "Delete", "Put"] operation HTTP method:  GET, POST, DELETE, PUT
-# @param [String] uritail The last part of the REST URI
-# @param [Hash] data Data to be sent.
-# @return [Jirarest2::Result]
+  # Execute the request
+  # @param [String, "Get", "Post", "Delete", "Put"] operation HTTP method:  GET, POST, DELETE, PUT
+  # @param [String] uritail The last part of the REST URI
+  # @param [Hash] data Data to be sent.
+  # @return [Jirarest2::Result]
   def execute(operation,uritail,data)
     uri = nil
     uri = URI(@credentials.connecturl+uritail)
@@ -72,7 +74,13 @@ class Connect
     when Net::HTTPBadRequest # 400
       raise Jirarest2::BadRequestError, result.body
     when Net::HTTPUnauthorized # 401 No login-credentials oder wrong ones.
-      raise Jirarest2::AuthenticationError, result.body
+      if @credentials.instance_of?(PasswordCredentials) then
+        raise Jirarest2::PasswordAuthenticationError, result.body
+      elsif @credentials.instance_of?(CookieCredentials) then
+        raise Jirarest2::CookieAuthenticationError, result.body
+      else
+        raise Jirarest2::AuthenticationError, result.body
+      end
     when Net::HTTPForbidden # 403
       if result.get_fields("x-authentication-denied-reason")[0] =~ /.*login-url=(.*)/ then #Captcha-Time
         raise Jirarest2::AuthenticationCaptchaError, $1
@@ -89,24 +97,22 @@ class Connect
   end # execute
 
 
-# Is the rest API really at the destination we think it is?
-# @return [Boolean] 
+  # Is the rest API really at the destination we think it is?
+  # @return [Boolean] 
   def check_uri
-    begin 
-      begin
-        ret = (execute("Get","dashboard","").code == "200")
-# TODO is the 404 really possible?
-      rescue Jirarest2::NotFoundError 
-        return false
-      rescue Jirarest2::BadRequestError
-        return false
-      end
+    begin
+      ret = (execute("Get","dashboard","").code == "200")
+      # TODO is the 404 really possible?
+    rescue Jirarest2::NotFoundError 
+      return false
+    rescue Jirarest2::BadRequestError
+      return false
     end
   end
 
-# Try to be nice. Parse the URI and see if you can find a pattern to the problem
-# @param [String] url
-# @return [String] a fixed URL
+  # Try to be nice. Parse the URI and see if you can find a pattern to the problem
+  # @param [String] url
+  # @return [String] a fixed URL
   def heal_uri(url = @credentials.connecturl)
     splitURI = URI.split(url) # [Scheme,Userinfo,Host,Port,Registry,Path,Opaque,Query,Fragment]
     splitURI[5].gsub!(/^(.*)2$/,'\12/')
@@ -123,8 +129,8 @@ class Connect
   end
 
 
-# try to fix the connecturl of this instance 
-# @return [String,Jirarest2::CouldNotHealURIError] Fixed URL or Exception
+  # try to fix the connecturl of this instance 
+  # @return [String,Jirarest2::CouldNotHealURIError] Fixed URL or Exception
  def heal_uri!
    if ! check_uri then
      @credentials.connecturl = heal_uri(@credentials.connecturl)

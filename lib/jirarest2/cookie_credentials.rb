@@ -24,7 +24,7 @@ require "pstore"
 # login uses basic auth to log in and then cookies are used
 class CookieCredentials < Credentials
 
-  # Location of the file the cookie is persited on a harddrive. Default is "~/.jirarest.cookie
+  # Location of the file the cookie is persited on a harddrive. Default is "~/.jirarest2.cookie
   attr_accessor :cookiestore
 
   # @param [String] url URL to JIRA(tm) instance
@@ -33,7 +33,7 @@ class CookieCredentials < Credentials
     super(connecturl)
     @cookiejar = {}
     @autosave = autosave
-    @cookiestore = "~/.jirarest.cookie"
+    @cookiestore = "~/.jirarest2.cookie"
   end
 
   # Setup new cookies or update the existing jar.
@@ -61,8 +61,18 @@ class CookieCredentials < Credentials
 
   # Get the auth header to send to the server
   # @param [Net:::HTTP::Post,Net:::HTTP::Put,Net:::HTTP::Get,Net:::HTTP::Delete] request Request object
+  # @raise [Jirarest2::AuthenticationError] if there is no JSESSIONID cookie entry 
+  # @return [String] Header-Line
   def get_auth_header(request)
-    request["Cookie"] = get_cookies 
+    if @cookiejar["JSESSIONID"].nil? then
+      raise Jirarest2::CookieAuthenticationError, "No valid cookies"
+    end
+    if get_cookies == "" then
+      # This code should never be executed as the AuthenticationError above will catch more cases
+      request["Cookie"] = "JSESSIONID=0" 
+    else
+      request["Cookie"] = get_cookies 
+    end
   end
 
   # Login per username and password in case the cookie is invalid or missing
@@ -70,7 +80,7 @@ class CookieCredentials < Credentials
   # @param [String] username Username to use for login
   # @param [String] password Password to use for login
   def login(username,password)
-    pconnecturl = @connecturl.gsub(/rest\/api\/.+/,"rest/") # Unfortunately the session information is not in the same tree as all the other rest calls
+    pconnecturl = @connecturl.gsub(/\/*rest\/api\/.+/,"/rest/") # Unfortunately the session information is not in the same tree as all the other rest calls
     pcred = PasswordCredentials.new(pconnecturl,username,password)
     pconnect = Connect.new(pcred)
     result = pconnect.execute("Post","auth/latest/session",{"username" => username, "password" => password})
@@ -101,6 +111,7 @@ class CookieCredentials < Credentials
     storage.transaction do
       @cookiejar = storage["cookiejar"]
     end
+    @cookiejar = {} if @cookiejar.nil? # Fix a not so nice feature of PStore if it doesn't find content in the file
   end
   
   # Writes the cookiejar to disk
