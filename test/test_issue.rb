@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require "minitest/autorun"
 require "jirarest2/connect"
 require "jirarest2/credentials"

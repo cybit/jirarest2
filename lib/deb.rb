@@ -1,6 +1,5 @@
-#!/usr/bin/env ruby
+# This files only purpose is to have one place to control all debugging information
 
-# Script to create a new issue with jira.
 #    Copyright (C) 2012 Cyril Bitterich
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -17,7 +16,12 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-puts "File has been renamed to jira_create_issue"
-newfile = File.dirname($0) + "/jira_create_issue"
-puts "Please use: #{newfile} #{$*.join(" ")}"
 
+if ENV['DEBUG'] then
+  require "pp"
+  # Version of pp that will result in errors if the environment Variable "DEBUG" is not set.
+  # A way to find forgotten debug info before shipping?
+  def ppp(data)
+    pp data
+  end
+end

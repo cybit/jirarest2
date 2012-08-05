@@ -76,6 +76,7 @@ require "json"
     end # JSON or not?
     
     return vars
+    STDIN.reopen if config_file == "-" #TODO See if this really does what it is supposed to do
   end # read.configfile
   
   

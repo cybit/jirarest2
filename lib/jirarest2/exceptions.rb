@@ -21,11 +21,15 @@ module Jirarest2
 
   # 400 - 
   class BadRequestError < StandardError ; end
-  # 401 Authentification failed 
-  class AuthentificationError < StandardError ; end
-  # 403 Authentification failed and JIRA(tm) requires a login with captcha to continue
-  class AuthentificationCaptchaError < StandardError ; end
-  # 403 Authentification failed
+  # 401 Authentication failed 
+  class AuthenticationError < StandardError ; end
+  # 401 Authentication failed with password authentication
+  class PasswordAuthenticationError < AuthenticationError ; end
+  # 401 Authentication failed with cookie authentication
+  class CookieAuthenticationError < AuthenticationError ; end
+  # 403 Authentication failed and JIRA(tm) requires a login with captcha to continue
+  class AuthenticationCaptchaError < StandardError ; end
+  # 403 Forbidden
   class ForbiddenError < StandardError ; end
   # 404 - Results in HTML body - not JSON
   class NotFoundError < StandardError ; end

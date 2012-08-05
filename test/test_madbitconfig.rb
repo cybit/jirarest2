@@ -1,6 +1,6 @@
 require "minitest/autorun"
 require "jirarest2/madbitconfig"
-require "pp"
+require "deb"
 
 class TestConfig < MiniTest::Unit::TestCase
 

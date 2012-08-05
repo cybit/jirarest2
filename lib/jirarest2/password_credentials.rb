@@ -1,4 +1,5 @@
-# class to get the credentials together
+# A Credentials object contains the data required to connect to a JIRA(tm) instance.
+
 #    Copyright (C) 2012 Cyril Bitterich
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -15,26 +16,33 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-require "uri"
+require_relative "credentials"
 
 # A Credentials object contains the data required to connect to a JIRA(tm) instance.
-class Credentials
+class PasswordCredentials < Credentials
 
-  # url to connect to the JIRA(tm) instance
-  attr_reader :connecturl
-
+  # username to use
+  attr_accessor :username
+  # password for the connection
+  attr_accessor :password
 
   # @param [String] url URL to JIRA(tm) instance
-  def initialize(url)
+  # @param [String] username
+  # @param [String] password
+  def initialize(url,username,password)
+    super(url)
+    @username = username
+    @password = password
+=begin
     uri = URI(url)
     if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
       @connecturl = url
     else
       raise Jirarest2::NotAnURLError
     end
+=end
   end
-
+=begin
   # Throws an Jirarest2::NotAnURLError if the given String is not an URI.
   # @param [String] url
   def connecturl=(url)
@@ -45,11 +53,11 @@ class Credentials
       raise Jirarest2::NotAnURLError
     end
   end
-
+=end
   # Get the auth header to send to the server
   # @param [Net:::HTTP::Post,Net:::HTTP::Put,Net:::HTTP::Get,Net:::HTTP::Delete] request Request object
   def get_auth_header(request)
-
+    request.basic_auth  @username, @password
   end
 
 end

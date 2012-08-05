@@ -49,6 +49,11 @@ module Jirarest2Bin
       text["username"] = "#{scriptopts.username}"
     end
     text["#password"] = "Your!PassW0rd"
+    if scriptopts.nocookieauth.nil? || scriptopts.nocookieauth then
+      text["nocookieauth"] = "false"
+    else
+      text["nocookieauth"] = "true"
+    end
     begin
       if scriptopts.writeconf == :forcewrite then
         MadbitConfig::write_configfile(scriptopts.configfile,text,:force)
@@ -75,6 +80,7 @@ module Jirarest2Bin
   # @param [String] username The Username to show
   # @return [String] the password as read from the command line
   def self.get_password(username)
+    STDIN.reopen '/dev/tty'
     password = ask("Enter your password for user \"#{username}\":  ") { |q| 
       q.echo = "*" 
     }
@@ -98,25 +104,31 @@ module Jirarest2Bin
       puts e
       filefail = false
     end
-    scriptopts.url = scriptopts.url + "/rest/api/2/"
-    
-    if scriptopts.pass.nil? && !( scriptopts.username.nil?)  then
-      scriptopts.pass = Jirarest2Bin::get_password(scriptopts.username)
-    end
-    
+    scriptopts.url = (scriptopts.url + "/rest/api/2/") if !( scriptopts.url =~ /\/rest\/api\/2\/$/)
     missing = Array.new
     missing << "URL"  if scriptopts.url.nil?
     missing << "username" if  scriptopts.username.nil?
     if  missing != [] then
       puts "Missing essential parameter(s) #{missing.join(",")}. Exiting..."
       exit 1
+    end
+
+    if !scriptopts.nocookieauth then 
+      credentials = CookieCredentials.new(scriptopts.url,true)
+      credentials.load_cookiejar
+      return credentials
+      # TODO What to do if the cookie expired?
     else
-      return Credentials.new(scriptopts.url, scriptopts.username, scriptopts.pass)
+      if scriptopts.pass.nil? && !( scriptopts.username.nil?)  then
+        scriptopts.pass = Jirarest2Bin::get_password(scriptopts.username)
+      end
+      return PasswordCredentials.new(scriptopts.url, scriptopts.username, scriptopts.pass)
     end
   end # get_credentials
 
 
   # If there is already a connection known returns that connection. If not or if the parameter is true it tries to create a new Connect object
+  # @note Don't call this directly as it will fail if your credentials are wrong.
   # @param [Openstruct] scriptopts The Openstruct object that contains all the options relevant for the script
   # @param [Connect] connection An existing connection. Will be nil the first time we use it.
   # @param [Boolean] reconnect Loose an existing connection and build a new one
@@ -126,7 +138,10 @@ module Jirarest2Bin
       begin
         connection = Connect.new(get_credentials(scriptopts))
         connection.heal_uri! # We want to be sure so we try to heal the connection_url if possible
-        return connection
+        connection
+      rescue Jirarest2::CookieAuthenticationError => e
+        connection.credentials.login(scriptopts.username,scriptopts.pass)
+        retry
       rescue Jirarest2::CouldNotHealURIError => e
         puts "REST API not found at #{e.to_s}"
         exit 3
@@ -135,7 +150,40 @@ module Jirarest2Bin
       return connection
     end
   end # get_connection
-  
+
+  # Execute a command to the server
+  # This version is safe if the credentials are wrong. Extend the case if more requests should be safeguarded.
+  # @param [Array] scriptopts Command line options from the calling script
+  # @param [Connection,Nil] connection a connection we er to use
+  # @param [Symbol] command to execute
+  # @param [Array] *args Arguments for the commands to call
+  # @return [Connection] The connection we used
+  # @return [Object] The object that was called in the command
+  # @example get a Connection object
+  #     connection = Jirarest2Bin::command(@scriptopts,@connection,:connection)
+  def self.command(scriptopts,connection,command,*args)
+    begin
+      if connection.nil? then
+        connection = get_connection(scriptopts,connection)
+      end
+      case command
+      when :issue
+        return connection, Issue.new(args[0],args[1],connection)
+      when :connection
+        return connection
+      end
+    rescue Jirarest2::PasswordAuthenticationError => e
+      scriptopts.pass = Jirarest2Bin.get_password(scriptopts.username)
+      retry
+    rescue Jirarest2::CookieAuthenticationError => e
+      connection.credentials.login(scriptopts.username,scriptopts.pass)
+      retry
+    rescue Jirarest2::AuthenticationCaptchaError => e
+      puts "Wrong Password too many times.\nCaptcha time at #{e.to_s} to reenable your account."
+        exit 1
+      end
+    
+  end
 
   # This method is here because I am to lazy to rewrite the options every time
   # use it with scriptopts = Jirarest2Bin::defaultoptions(opts,scriptopts)
@@ -161,7 +209,7 @@ module Jirarest2Bin
     end
     
     
-    opts.on_tail("-u", "--username USERNAME", "Your Jira Username if you don't want to use the one in the master file") do |u|
+    opts.on_tail("-u", "--username USERNAME", "Your Jira Username if it is not the one in the master file") do |u|
       scriptopts.username = u 
     end
     
@@ -176,6 +224,10 @@ module Jirarest2Bin
       scriptopts.url = url
     end
     
+    opts.on_tail("--no-cookie", "Don't try to authenticate via cookies") do |nocookie|
+      scriptopts.nocookieauth = true
+    end
+
     opts.on_tail("-h", "--help", "Display this screen") do
       puts opts
       exit

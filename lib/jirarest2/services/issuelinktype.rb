@@ -72,7 +72,7 @@ public
 
   #Get the internal name and direction instead of the one in the UI.
   # @param [String] uiname the way the linktype is shown in the browser
-  # @return [Array, nil] Array with the name and the direction ("inward" or "outward") if successfull , nil if not
+  # @return [Array, nil] Array with the name and the direction ("inward" or "outward") if successful , nil if not
   def name(uiname)
     return uiname if @types.has_key?(uiname)  # If the name is already correct just bounce it back
     @types.each { |name,singletype|

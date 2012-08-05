@@ -7,7 +7,7 @@ require "webmock/minitest"
 
 class TestWatcher < MiniTest::Unit::TestCase
   def setup
-    cred = Credentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
+    cred = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)
   end
   
@@ -27,7 +27,7 @@ class TestWatcher < MiniTest::Unit::TestCase
     stub_request(:delete, "http://test:1234@localhost:2990/jira/rest/api/2/issue/MFTP-7/watchers?username=cebit").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 401, :body => '{"errorMessages":["User \'test\' is not allowed to remove watchers from issue \'MFTP-7\'"],"errors":{}}', :headers => {})
 
     watchers = Watcher.new(@con,"MFTP-7")
-    assert_raises(Jirarest2::AuthentificationError) { 
+    assert_raises(Jirarest2::PasswordAuthenticationError) { 
       watchers.remove_watcher("cebit")
     }
   end
@@ -36,7 +36,7 @@ class TestWatcher < MiniTest::Unit::TestCase
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issue/MFTP-2/watchers").with(:body => "\"cebit\"", :headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 401, :body => '{"errorMessages":["User \'test\' is not allowed to add watchers to issue \'MFTP-2\'"],"errors":{}}', :headers => {})
 
     watcherna = Watcher.new(@con, "MFTP-2")
-    assert_raises(Jirarest2::AuthentificationError) {
+    assert_raises(Jirarest2::PasswordAuthenticationError) {
       watcherna.add_watcher("cebit")
     }
   end
