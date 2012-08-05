@@ -80,6 +80,7 @@ module Jirarest2Bin
   # @param [String] username The Username to show
   # @return [String] the password as read from the command line
   def self.get_password(username)
+    STDIN.reopen '/dev/tty'
     password = ask("Enter your password for user \"#{username}\":  ") { |q| 
       q.echo = "*" 
     }
