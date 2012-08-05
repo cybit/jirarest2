@@ -23,6 +23,7 @@ There are scripts to create new issues with watchers and link those to existing 
    * jira_create_issue allows you to create new issues with watchers and link those to existing issues
    * jira_watcher allows you to manipulate watchers on existing issues
    * jira_comment allows you to add read and update comments. (The latter only if you know the right comment id)
+   * Uses cookie_auth by default. First login will be done via basic auth though.
 
 == SYNOPSIS:
 

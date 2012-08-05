@@ -1,3 +1,25 @@
+=== 0.0.11 / 2012-08-05
+
+* 1 major enhancements:
+
+  * Added support to authenticate with cookies (default with the scripts)
+
+* 2 minor enhancements:
+
+  * Refactored Connect
+  * Refactored Credentials
+
+* 1 bug fixes:
+
+  * fixed #7 It's now possible to use the scripts in (unix) pipes as well
+
+* 3 unknowns:
+
+  * Added deb.rb to find debug information at compile stage (reacts to environment variable "DEBUG")
+  * Deleted deprecated files
+  * corrected spelling errors
+
+
 === 0.0.10 / 2012-08-02
 
 * 1 major enhancement:
