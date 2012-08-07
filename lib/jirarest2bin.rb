@@ -234,7 +234,8 @@ module Jirarest2Bin
     end
     
     opts.on_tail("--version", "Show version") do
-      puts OptionParser::Version.join(".")
+      # puts OptionParser::Version.join(".")
+      puts opts.ver
       exit
     end
     
