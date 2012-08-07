@@ -1,3 +1,15 @@
+=== 0.0.12 / 2012-08-07
+
+* 1 major enhancement:
+
+  * Renamed Issue to NewIssue
+
+* 2 minor enhancements:
+
+  * Added feature to see if we are really authenticated. Had to change credentials around a bit for that. Hoperfully fixes #23
+  * Added new Issue class to work with the issues themselves. Doesn't work and needs a lot of work yet.
+
+
 === 0.0.11 / 2012-08-05
 
 * 1 major enhancements:

@@ -4,7 +4,6 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
-bin/create_issue.rb
 bin/jira_comment
 bin/jira_create_issue
 bin/jira_watcher
@@ -17,6 +16,7 @@ lib/jirarest2/credentials.rb
 lib/jirarest2/exceptions.rb
 lib/jirarest2/issue.rb
 lib/jirarest2/madbitconfig.rb
+lib/jirarest2/newissue.rb
 lib/jirarest2/password_credentials.rb
 lib/jirarest2/result.rb
 lib/jirarest2/services.rb
@@ -41,6 +41,7 @@ test/test_issue.rb
 test/test_issuelink.rb
 test/test_issuelinktype.rb
 test/test_madbitconfig.rb
+test/test_newissue.rb
 test/test_password_credentials.rb
 test/test_result.rb
 test/test_watcher.rb

@@ -17,7 +17,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = "0.0.11"
+VERSION = "0.0.12"
+Version = VERSION
 
 require_relative "jirarest2/connect"
 require_relative "jirarest2/issue"

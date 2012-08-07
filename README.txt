@@ -16,7 +16,6 @@ There are scripts to create new issues with watchers and link those to existing 
 
  *Ruby1.9.1 is needed. Ruby1.8 doesn't work!*
 
-
 == FEATURES/PROBLEMS:
 
    * Still in the alpha stages. The classes are still pretty volatile.
