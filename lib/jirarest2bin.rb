@@ -114,7 +114,7 @@ module Jirarest2Bin
     end
 
     if !scriptopts.nocookieauth then 
-      credentials = CookieCredentials.new(scriptopts.url,true)
+      credentials = CookieCredentials.new(scriptopts.url,scriptopts.username,true)
       credentials.load_cookiejar
       return credentials
       # TODO What to do if the cookie expired?
@@ -168,7 +168,7 @@ module Jirarest2Bin
       end
       case command
       when :issue
-        return connection, Issue.new(args[0],args[1],connection)
+        return connection, NewIssue.new(args[0],args[1],connection)
       when :connection
         return connection
       end

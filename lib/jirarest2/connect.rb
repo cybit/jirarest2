@@ -43,7 +43,14 @@ class Connect
   # @return [Jirarest2::Result]
   def execute(operation,uritail,data)
     uri = nil
-    uri = URI(@credentials.connecturl+uritail)
+    if (uritail == "auth/latest/session" )  then # this is the exception regarding the base path
+      uristring = @credentials.baseurl+uritail
+    else
+      uristring = @credentials.connecturl+uritail
+    end
+ 
+    uristring.gsub!(/\/\//,"/").gsub!(/^(http[s]*:)/,'\1/')
+    uri = URI(uristring)
     if data != "" then
       if ! (operation == "Post" || operation == "Put") then # POST carries the payload in the body that's why we have to wait
         uri.query = URI.encode_www_form(data)
@@ -64,12 +71,15 @@ class Connect
       end
     end
     
-
     # Ask the server
     result = Net::HTTP.start(uri.host, uri.port) {|http|
       http.request(req)
     }
     # deal with output
+
+    if ((result["x-ausername"] != @credentials.username) && (uritail != "auth/latest/session" )) then # this is not the right authentication
+      verify_auth # make sure
+    end      
     case result
     when Net::HTTPBadRequest # 400
       raise Jirarest2::BadRequestError, result.body
@@ -117,7 +127,7 @@ class Connect
   def heal_uri(url = @credentials.connecturl)
     splitURI = URI.split(url) # [Scheme,Userinfo,Host,Port,Registry,Path,Opaque,Query,Fragment]
     splitURI[5].gsub!(/^(.*)2$/,'\12/')
-    splitURI[5].gsub!(/\/+/,'/') # get rid of duplicate /
+    splitURI[5].gsub!(/[\/]+/,'/') # get rid of duplicate /
     splitURI[5].gsub!(/(rest\/api\/2\/)+/,'\1') # duplicate path to rest
     splitURI[5].gsub!(/^(.*)\/login.jsp(\/rest\/api\/2\/)$/,'\1\2') # dedicated login page
     splitURI[5].gsub!(/^(.*)\/secure\/Dashboard.jspa(\/rest\/api\/2\/)$/,'\1\2') # copied the dashboard URL (or the login Page)
@@ -142,6 +152,15 @@ class Connect
      raise Jirarest2::CouldNotHealURIError, @credentials.connecturl
    end
  end
+
+ # Verify that we are authenticated
+ # @return [Boolean] true if the authentication seems to be valid (actually it checks if there is a session)
+ def verify_auth
+   ret =   execute("Get","auth/latest/session","") 
+   store_cookiejar if @credentials.instance_of?(CookieCredentials) && @credentials.autosave
+   return ret.code == "200" 
+ end
+
 
 end # class
 

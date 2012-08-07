@@ -21,8 +21,6 @@ require_relative "credentials"
 # A Credentials object contains the data required to connect to a JIRA(tm) instance.
 class PasswordCredentials < Credentials
 
-  # username to use
-  attr_accessor :username
   # password for the connection
   attr_accessor :password
 
@@ -30,30 +28,10 @@ class PasswordCredentials < Credentials
   # @param [String] username
   # @param [String] password
   def initialize(url,username,password)
-    super(url)
-    @username = username
+    super(url,username)
     @password = password
-=begin
-    uri = URI(url)
-    if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
-      @connecturl = url
-    else
-      raise Jirarest2::NotAnURLError
-    end
-=end
   end
-=begin
-  # Throws an Jirarest2::NotAnURLError if the given String is not an URI.
-  # @param [String] url
-  def connecturl=(url)
-    uri = URI(url)
-    if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
-      @connecturl = url
-    else
-      raise Jirarest2::NotAnURLError
-    end
-  end
-=end
+
   # Get the auth header to send to the server
   # @param [Net:::HTTP::Post,Net:::HTTP::Put,Net:::HTTP::Get,Net:::HTTP::Delete] request Request object
   def get_auth_header(request)

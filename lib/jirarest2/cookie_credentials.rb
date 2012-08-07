@@ -29,8 +29,8 @@ class CookieCredentials < Credentials
 
   # @param [String] url URL to JIRA(tm) instance
   # @param [Boolean] autosave Save the cookie on the harddisk whenever something happens?
-  def initialize(connecturl, autosave = false )
-    super(connecturl)
+  def initialize(connecturl, username, autosave = false )
+    super(connecturl,username)
     @cookiejar = {}
     @autosave = autosave
     @cookiestore = "~/.jirarest2.cookie"
@@ -80,29 +80,20 @@ class CookieCredentials < Credentials
   # @param [String] username Username to use for login
   # @param [String] password Password to use for login
   def login(username,password)
-    pconnecturl = @connecturl.gsub(/\/*rest\/api\/.+/,"/rest/") # Unfortunately the session information is not in the same tree as all the other rest calls
-    pcred = PasswordCredentials.new(pconnecturl,username,password)
+    pcred = PasswordCredentials.new(@connecturl,username,password)
     pconnect = Connect.new(pcred)
     result = pconnect.execute("Post","auth/latest/session",{"username" => username, "password" => password})
-    bake_cookies(result.header["set-cookie"]) # I already had them seperated into an Array.
+    bake_cookies(result.header["set-cookie"]) # I already had them seperated into an array.
     return @cookiejar["JSESSIONID"]
   end
   
   # Invalidates the current cookie
   # @return [Boolean] true if successful
   def logout
-    originalConnectUrl = @connecturl
-    begin
-      @connecturl = @connecturl.gsub(/rest\/api\/.+/,"rest/") # Unfortunately the session information is not in the same tree as all the other rest calls
       con = Connect.new(self)
       ret = con.execute("Delete","auth/latest/session","").code
       store_cookiejar if @autosave
       return true if ret == "204"
-    rescue
-      raise
-    ensure
-      @connecturl = originalConnectUrl
-    end
   end
   
   # Loads a cookiejar from disk

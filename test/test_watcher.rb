@@ -9,10 +9,14 @@ class TestWatcher < MiniTest::Unit::TestCase
   def setup
     cred = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)
+    stub_request(:get, "http://test:1234@localhost:2990/jira/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+
   end
   
   def test_get_watchers_filled
     stub_request(:get, "http://test:1234@localhost:2990/jira/rest/api/2/issue/MFTP-7/watchers").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => '{"self":"http://localhost:2990/jira/rest/api/2/issue/MFTP-7/watchers","isWatching":true,"watchCount":3,"watchers":[{"self":"http://localhost:2990/jira/rest/api/2/user?username=admin","name":"admin","avatarUrls":{"16x16":"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122","48x48":"http://localhost:2990/jira/secure/useravatar?avatarId=10122"},"displayName":"admin","active":true},{"self":"http://localhost:2990/jira/rest/api/2/user?username=cebit","name":"cebit","avatarUrls":{"16x16":"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122","48x48":"http://localhost:2990/jira/secure/useravatar?avatarId=10122"},"displayName":"Cyril Bitterich","active":true},{"self":"http://localhost:2990/jira/rest/api/2/user?username=test","name":"test","avatarUrls":{"16x16":"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122","48x48":"http://localhost:2990/jira/secure/useravatar?avatarId=10122"},"displayName":"Test User","active":true}]}', :headers => {})
+#    stub_request(:get, "http://test:1234@localhost:2990/jira/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+
     watchers = Watcher.new(@con,"MFTP-7")
     assert_equal ["admin","cebit","test"], watchers.get_watchers
   end
