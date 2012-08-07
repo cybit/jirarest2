@@ -23,13 +23,18 @@ class Credentials
 
   # url to connect to the JIRA(tm) instance
   attr_reader :connecturl
-
+  # username to use
+  attr_accessor :username
+  # basepath for the REST methods
+  attr_reader :baseurl
 
   # @param [String] url URL to JIRA(tm) instance
-  def initialize(url)
+  def initialize(url,username)
     uri = URI(url)
     if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
       @connecturl = url
+      @username = username
+      @baseurl = @connecturl.gsub(/rest\/api\/.+/,"rest/")
     else
       raise Jirarest2::NotAnURLError
     end
@@ -45,7 +50,7 @@ class Credentials
       raise Jirarest2::NotAnURLError
     end
   end
-
+  
   # Get the auth header to send to the server
   # @param [Net:::HTTP::Post,Net:::HTTP::Put,Net:::HTTP::Get,Net:::HTTP::Delete] request Request object
   def get_auth_header(request)

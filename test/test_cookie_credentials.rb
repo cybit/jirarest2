@@ -7,7 +7,7 @@ require "deb"
 class TestCookieCredentials < MiniTest::Unit::TestCase
   
   def setup
-    @cred = CookieCredentials.new("http://localhost:2990/jira/rest/api/2/")
+    @cred = CookieCredentials.new("http://localhost:2990/jira/rest/api/2/","test")
     @header = ["a.xsrf.token=BP8Q-WXN6-SKX3-NB5M|11ca22ad2bf3467bee711e5b912536d1fb046a4a|lout; Path=/myapp", "JSESSIONID=6C3AE9205FFC6E0DEC3353C2D10745D8; Path=/"]
   end
 

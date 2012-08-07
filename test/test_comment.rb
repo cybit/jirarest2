@@ -8,6 +8,8 @@ class TestComment < MiniTest::Unit::TestCase
   def setup
     cred = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)
+    stub_request(:get, "http://test:1234@localhost:2990/jira/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+
   end
 
   def test_get_comment_filled
@@ -43,7 +45,8 @@ class TestComment < MiniTest::Unit::TestCase
     stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issue/SP-3/comment").with(:body => "{\"body\":\"Text for the long run\"}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 201, :body => '{"self":"http://localhost:2990/jira/rest/api/2/issue/10104/comment/10110","id":"10110","author":{"self":"http://localhost:2990/jira/rest/api/2/user?username=test","name":"test","emailAddress":"jira-test@localhost","avatarUrls":{"16x16":"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122","48x48":"http://localhost:2990/jira/secure/useravatar?avatarId=10122"},"displayName":"Test User","active":true},"body":"Text for the long run","updateAuthor":{"self":"http://localhost:2990/jira/rest/api/2/user?username=test","name":"test","emailAddress":"jira-test@localhost","avatarUrls":{"16x16":"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122","48x48":"http://localhost:2990/jira/secure/useravatar?avatarId=10122"},"displayName":"Test User","active":true},"created":"2012-07-27T20:36:07.832+0200","updated":"2012-07-27T20:36:07.832+0200"}', :headers => {})
 
     comment = Comment.new(@con,"SP-3")
-    assert_match /,"body":"Text for the long run","updateAuthor"/, comment.add("Text for the long run").body
+    match = Regexp.new(',"body":"Text for the long run","updateAuthor"')
+    assert_match match, comment.add("Text for the long run").body
     assert_instance_of Jirarest2::Result, comment.add("Text for the long run")
   end
 

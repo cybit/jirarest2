@@ -8,6 +8,8 @@ class TestConnect < MiniTest::Unit::TestCase
   def setup
     cred = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @con = Connect.new(cred)
+    stub_request(:get, "http://test:1234@localhost:2990/jira/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+    
   end
   
   def test_access
@@ -33,6 +35,8 @@ class TestConnect < MiniTest::Unit::TestCase
   
   def test_check_uri_false
     stub_request(:get, "http://test:1234@localhost:2990/rest/api/2/dashboard").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 400, :body => "", :headers => {})
+    stub_request(:get, "http://test:1234@localhost:2990/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+
     cred = PasswordCredentials.new("http://localhost:2990/rest/api/2/","test","1234")
     con1 = Connect.new(cred)
     assert_equal false,con1.check_uri
@@ -56,11 +60,11 @@ class TestConnect < MiniTest::Unit::TestCase
   end
 
   def test_working_heal_uri!
-
-    stub_request(:get, "http://test:1234@localhost:2990/jira//rest/api//2//dashboard").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 404, :body => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><status><status-code>404</status-code><message>null for uri: http://localhost:2990/jira//rest/api//2//dashboard</message></status>', :headers => {"X-AUSERNAME" => "test" })
-
+    stub_request(:get, "http://test:1234@localhost:2990/jira/login.jsp/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
+    
+    stub_request(:get, "http://test:1234@localhost:2990/jira/login.jsp/rest/api/2/dashboard").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 404, :body => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><status><status-code>404</status-code><message>null for uri: http://localhost:2990/jira//rest/api//2//dashboard</message></status>', :headers => {"X-AUSERNAME" => "test" })
     ## First an URL we can fix
-    cred = PasswordCredentials.new("http://localhost:2990/jira//rest/api//2//","test","1234")
+    cred = PasswordCredentials.new("http://localhost:2990/jira/login.jsp/rest/api//2//","test","1234")
     con = Connect.new(cred)
     assert_equal false,con.check_uri
     
@@ -71,6 +75,7 @@ class TestConnect < MiniTest::Unit::TestCase
   
   def test_notworking_heal_uri!
     stub_request(:get, "http://test:1234@localhost:2990/secure/Dashboard.jspadashboard").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 400, :body => "", :headers => {})
+    stub_request(:get, "http://test:1234@localhost:2990/secure/Dashboard.jspaauth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
     ## And now one we cant't fix
     cred = PasswordCredentials.new("http://localhost:2990/secure/Dashboard.jspa","test","1234")
     con = Connect.new(cred)
@@ -78,5 +83,15 @@ class TestConnect < MiniTest::Unit::TestCase
     assert_raises(Jirarest2::CouldNotHealURIError){ con.heal_uri! }
     assert_equal false,con.check_uri
   end
-  
+
+  #
+  # Missing tests
+  #
+  def test_verify_auth_session
+    # returncode 200
+  end
+
+  def test_verify_auth_nosession
+    # returncode 401
+  end
 end

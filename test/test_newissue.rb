@@ -5,10 +5,11 @@ require "webmock/minitest"
 
 class TestNewIssue < MiniTest::Unit::TestCase
   def setup
-    @credentials = Credentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
+    @credentials = PasswordCredentials.new("http://localhost:2990/jira/rest/api/2/","test","1234")
     @connect = Connect.new(@credentials)
     raw_response_file = File.new(File.dirname(__FILE__)+"/data/issuespec.txt")
     stub_request(:get, "http://test:1234@localhost:2990/jira/rest/api/2/issue/createmeta/?expand=projects.issuetypes.fields&issuetypeNames=My%20issue%20type&projectKeys=MFTP").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(raw_response_file)
+    stub_request(:get, "http://test:1234@localhost:2990/jira/rest/auth/latest/session").with(:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 200, :body => "", :headers => {})
     @existentIssue = NewIssue.new("MFTP","My issue type",@connect)
   end
 
