@@ -53,6 +53,7 @@ class CommentElement
   end
 end
 
+# Work with all the comments that an issue might have
 class Comment < Services
 #TODO See to documentation for "DELETE" as we use the superclass here and it will not be shown
 

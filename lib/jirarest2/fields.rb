@@ -14,13 +14,20 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+require_relative "fields/multifields"
+require_relative "fields/simplevaluefield"
+require_relative "fields/simplekeyfield"
+require_relative "fields/simplenamefield"
+require_relative "fields/timefield"
+require_relative "fields/cascadingfield"
+
 module Jirarest2
   # Superclass for all fieldtypes we will get from jira
   class Fields
     # Type of the field at the root of the JSON representation
     attr_reader :roottype
     # Type of the field at the base of the representation
-    attr_reader :subtype
+    attr_reader :basetype
     def initialize
     end
   end

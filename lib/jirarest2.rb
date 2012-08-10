@@ -17,8 +17,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# Version Parameter all CAPS
 VERSION = "0.0.12"
-Version = "0.0.12"
+# Version Parameter 
+Version = VERSION
 
 require_relative "jirarest2/connect"
 require_relative "jirarest2/issue"

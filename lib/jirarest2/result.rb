@@ -35,23 +35,16 @@ module Jirarest2
     
     
     # Show the result in a more usable form
-    # @param [Net::HTTPResponse]
+    # @param [Net::HTTPResponse] httpResponse 
     def initialize(httpResponse)
-      #   pp httpResponse
-      #   pp httpResponse.class
-      #   pp httpResponse.body
       @code = httpResponse.code
       @header = httpResponse.to_hash
       @body = httpResponse.body
-      #pp @body
       if httpResponse.instance_of?(Net::HTTPNoContent) or httpResponse.body == "" or httpResponse.body.nil? then # If there is nothing in the body it would be hard to parse it.
         @result = @body
       else
         @result = JSON.parse(@body)
       end
-      #pp @code
-      #pp @header
-      
     end # initialize
     
   end # class

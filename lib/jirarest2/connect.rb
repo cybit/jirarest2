@@ -40,6 +40,14 @@ class Connect
   # @param [String, "Get", "Post", "Delete", "Put"] operation HTTP method:  GET, POST, DELETE, PUT
   # @param [String] uritail The last part of the REST URI
   # @param [Hash] data Data to be sent.
+  # @raise [Jirarest2::BadRequestError] Raised if the servers returns statuscode 400 (bad request)
+  # @raise [Jirarest2::PasswordAuthenticationError] Raised if authentication failed (status code 401) and the credentials were username/password based
+  # @raise [Jirarest2::CookieAuthenticationError] Raised if authentication failed (status code 401) and the credentials were cookie based
+  # @raise [Jirarest2::AuthenticationError] Raised if authentication failed (status code 401) and the credentials were neither cookie or username/password based
+  # @raise [Jirarest2::AuthentificationCaptchaError] Raised if the server sends a forbidden status (status code 403) and an login url which means the user needs to answer a captcha
+  # @raise [Jirarest2::ForbiddenError] Raised if the server sends a forbidden status (status code 403) and no login url
+  # @raise [Jirarest2::NotFoundError] Raised if the server returns statuscode 404 (Not found)
+  # @raise [Jirarest2::MethodNotAllowedError] Raised if the server returns statuscode 405 (Method not allowed)
   # @return [Jirarest2::Result]
   def execute(operation,uritail,data)
     uri = nil
@@ -141,7 +149,8 @@ class Connect
 
 
   # try to fix the connecturl of this instance 
-  # @return [String,Jirarest2::CouldNotHealURIError] Fixed URL or Exception
+  # @raise [Jirarest2::CouldNotHealURIError] Raised if the url can not be healed automatically
+  # @return [String] Fixed URL 
  def heal_uri!
    if ! check_uri then
      @credentials.connecturl = heal_uri(@credentials.connecturl)

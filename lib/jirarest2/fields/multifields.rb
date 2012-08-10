@@ -20,7 +20,8 @@ module Jirarest2
 
     def initialize
       roottype = "Array"
-      subtype = "Hash"
+      basetype = "Hash"
+      #keyvalue
     end
 
   end

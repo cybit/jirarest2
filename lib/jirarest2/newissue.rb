@@ -15,9 +15,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-=begin
-# An Issue object contains all the data of an issue
-=end
+# class to handle new issues (building them up, changing fields, persistence)
 class NewIssue
     
   # issue type of the issue 
@@ -30,6 +28,8 @@ class NewIssue
   # @param [String] project Key of the JIRA(tm) project the issue belongs to
   # @param [String] type Issuetype the issue belongs to
   # @param [Connection] connection
+  # @raise [Jirarest2::WrongProjectException] Raised of the project type is not found in the answer
+  # @raise [Jirarest2::WrongIssuetypeException] Raise if the issuetype is not found in the answer
   def initialize (project,type,connection)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
     answer = connection.execute("Get","issue/createmeta/",query)
@@ -82,6 +82,7 @@ class NewIssue
   
   # @param [String] field Name of the field
   # @return [String] type of the Field 
+  # @raise [Jirarest2::WrongFieldnameException] Raised if the fieldname is wrong (case is important!)
   def fieldtype(field)
     # If the fieldname is wrong we want to tell this and stop execution (or maybe let the caller fix it)
     if @issuefields[field].nil? then
@@ -129,8 +130,9 @@ class NewIssue
 # }
 =end
 
-  # @return [Hash] Hash to be sent to JIRA(tm) in a JSON representation
   public
+  # take this classes representation of an issue and make it presentable to JIRA(tm)
+  # @return [Hash] Hash to be sent to JIRA(tm) in a JSON representation
   def jirahash
     h = Hash.new
     issuetype = {"issuetype" => {"name" => @issuetype}}
@@ -151,11 +153,12 @@ class NewIssue
     return h
   end
 
+  protected
   # check if the value is allowed for this field
   # @param [String] key Name of the field
   # @param [String] value Value to be checked
   # @return [Boolean, Jirarest2::ValueNotAllowedException]
-  protected
+  # @raise [Jirarest2::ValueNotAllowedException] Raised if the given value is not valid for this field (case is important!)
   def value_allowed?(key,value)
     if @issuefields[key]["allowedValues"].include?(value) 
       return true
@@ -188,10 +191,11 @@ class NewIssue
   end
 
 
+  public
   # TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect")
   # @param [String] key Name of the field
   # @param [String] value Value the field should be set to, this is either a String or an Array (don't know if numbers work too)
-  public
+  # @raise [Jirarest2::WrongFieldnameException] Raised if the name of the field is not found
   def set_field(key, value)
     if  @issuefields.include?(key) then
       if @issuefields[key].include?("allowedValues") then
@@ -213,6 +217,7 @@ class NewIssue
 
   # persitence of this Issue object instance
   # @param [Connection] connection
+  # @raise [Jirarest2::RequiredFieldNotSetException] Raised if a required field is not set
   # @return [Jirarest2::Result]
   def persist(connection)
     get_requireds.each { |fieldname| 
