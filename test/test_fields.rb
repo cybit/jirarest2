@@ -7,8 +7,8 @@ module Jirarest2
     def setup
       @fieldid = "FieldID" if @fieldid.nil?
       @fieldname = "Fieldname" if @fieldname.nil?
+      @fieldargs = Hash.new if @fieldargs.nil?
       if @fieldrequired.nil? then
-        @fieldargs = Hash.new
         @fieldrequired = false
       end
       @fieldargs[:required] = @fieldrequired
@@ -32,6 +32,7 @@ module Jirarest2
       @fieldid = "customfield_10101"
       @fieldname = "issuetype"
       @fieldtype = "TextField"
+      @fieldrequired = true
       super
     end
     
@@ -41,7 +42,8 @@ module Jirarest2
     end
     
     def test_to_j
-      ret = {"customfield_10101" => nil}
+#      ret = {"customfield_10101" => nil}
+      ret = nil
       assert_equal ret,@field.to_j
     end
 
@@ -57,6 +59,7 @@ module Jirarest2
       @fieldid = "customfield_10001"
       @fieldname = "Date Time Field"
       @fieldtype = "DateTimeField"
+      @fieldrequired = true
       super
     end
     
@@ -83,13 +86,49 @@ module Jirarest2
     end
 
     def test_to_j
-      ret = {"customfield_10001" => ""}
+#      ret = {"customfield_10001" => ""}
+      ret = nil
       assert_equal ret,@field.to_j
       @field.value = "2011-01-31 15:25:34"
       ret = {"customfield_10001" => "2011-01-31T15:25:34+00:00"}
       assert_equal ret,@field.to_j
     end
   end # class TestDateTimeField
+
+  class TestNumberField < TestField
+    def setup
+      @fieldid = "timespent"
+      @fieldname = "Time Spent"
+      @fieldtype = "NumberField"
+      @fieldrequired = false
+      super
+    end
+
+    # This could be put to the top class but here it is anchored
+    def test_fieldtype
+      assert_instance_of Jirarest2::NumberField, @field
+    end
+    
+    def test_set_get_value
+      @field.value = 12
+      assert_equal 12,@field.value
+      @field.value = 12.5
+      assert_equal 12.5,@field.value
+      @field.value = "12"
+      assert_equal 12,@field.value
+      @field.value = "12.5"
+      assert_equal 12.5,@field.value
+    end
+
+    def test_to_j
+      assert_equal nil,@field.to_j
+      @field.value = "12.54"
+      ret = {"timespent" => 12.54}
+      assert_equal ret,@field.to_j
+      
+    end
+    
+  end # class TestNumberField
 
   class TestHashField < TestField
     def setup
@@ -106,18 +145,14 @@ module Jirarest2
       assert_instance_of Jirarest2::HashField, @field
     end
     
-    def test_to_j
-      ret = {"customfield_10006" => nil}
-      assert_equal ret,@field.to_j
-    end
-
     def test_set_get_value
       @field.value = "Lorem ipsum"
       assert_equal "Lorem ipsum",@field.value
     end
 
     def test_to_j
-      ret = {"customfield_10006"=>{"value"=>nil}}
+#      ret = {"customfield_10006"=>{"value"=>nil}}
+      ret = nil
       assert_equal ret, @field.to_j
       field = Jirarest2::HashField.new("blah","mumbatz",{:key => "name"})
       field.value = "test"
@@ -135,7 +170,101 @@ module Jirarest2
     
   end # class TestHashField
   
-end
+  class TestMultiField < TestField
+    def setup
+      @fieldid = "customfield_10006"
+      @fieldname = "List select"
+      @fieldtype = "MultiField"
+      @fieldrequired = false
+      super
+      #      @field = HashField.new(@fieldid,@fieldname,{:key => @key, :required => @fieldrequired})
+    end
+    
+    # This could be put to the top class but here it is anchored
+    def test_fieldtype
+      assert_instance_of Jirarest2::MultiField, @field
+    end
+
+    def test_set_get_value 
+      @field.value = "Lorem ipsum"
+      assert_equal "Lorem ipsum",@field.value
+      test = ["number1","number2"]
+      @field.value = test
+      assert_equal test,@field.value
+      test = [HashField.new("bugger","Big Bugger",{:key => "name"}),HashField.new("snigger","Snigger",{:key => "name"})]
+      @field.value = test
+      assert_equal test,@field.value
+    end
+
+    def test_delete
+      @field.value = ["ene","mine","mo","minki","pinki","poo"]
+      @field.delete("mo")
+      assert_equal ["ene","mine","minki","pinki","poo"],@field.value
+      @field.delete(@field)
+      assert_equal [],@field.value
+    end
+    def setup_an_array
+      h1 = HashField.new("custom42","Big Bugger",{:key => "name"})
+      h2 = HashField.new("custom44","Snigger",{:key => "name"})
+      h3 = HashField.new("custom10056","Bloop",{:key => "id"})
+      h4 = HashField.new("custom66","snoop",{:key => "id"})
+      h1.value = "me"
+      h2.value = "minime"
+      h3.value = "me"
+      h4.value = "moooo"
+      @test = [h1,h2,h3,h4]
+      @field.value = [h1,h2,h3,h4]
+    end
+    
+    def test_delete_by_value
+      setup_an_array
+      h1 = @test[0]
+      h2 = @test[1]
+      h3 = @test[2]
+      h4 = @test[3]
+      assert_equal [h1,h3,h4],@field.delete_by_value("minime")
+      assert_equal [h1,h3,h4],@field.value
+      assert_equal [h4],@field.delete_by_value("me")
+      assert_equal [h4],@field.value
+    end
+    
+    def test_index_get
+      setup_an_array
+      val = @test[2]
+      assert_equal val,@field[2]
+    end
+
+    def test_index_set
+      setup_an_array
+      val = HashField.new("snigger","Snigger",{:key => "name"})
+      @field[3] = val
+      assert_equal val,@field.value[3]
+      val1 = "a String"
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field[6] = val1 } # No field mixing allowed
+    end
+    
+    def test_push
+      @field << "Mikey"
+      @field << "Minney"
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field << 42 }
+      assert_equal ["Mikey", "Minney"],@field.value
+    end
+    
+    def test_to_j
+      #      ret = {"customfield_10006"=>{"value"=>nil}}
+      ret = nil
+      assert_equal ret, @field.to_j
+      setup_an_array
+      ret = {"customfield_10006"=>[{"name"=>"me"}, {"name"=>"minime"}, {"id"=>"me"}, {"id"=>"moooo"}]}
+      assert_equal ret, @field.to_j
+      @field.value = ["number1","number2","number3"]
+      ret = {"customfield_10006"=>["number1", "number2", "number3"]}
+      assert_equal ret, @field.to_j
+
+    end
+   end # class TestMultiField
+
+ end
 =begin
 customfieldtypes to check
 "datetime" # DateTimeField
@@ -145,7 +274,7 @@ customfieldtypes to check
 "cascadingselect"
 "select" # HashField
 "multiselect"
-"textfield" TextField
+"textfield" # TextField
 "multiuserpicker"
-NumberField
+NumberField #Number Field
 =end
