@@ -2,7 +2,7 @@ require "minitest/autorun"
 require "jirarest2/field"
 require "deb"
 
-module Jirarest2
+module Jirarest2Field
   class TestField < MiniTest::Unit::TestCase
     def setup
       @fieldid = "FieldID" if @fieldid.nil?
@@ -12,8 +12,7 @@ module Jirarest2
         @fieldrequired = false
       end
       @fieldargs[:required] = @fieldrequired
-
-      @fieldtype = "Field" if @fieldtype.nil?
+      @fieldtype = "Field"  if @fieldtype.nil?
       @field = eval(@fieldtype).new(@fieldid,@fieldname,@fieldargs) 
     end
     
@@ -25,6 +24,13 @@ module Jirarest2
       assert_equal @fieldid,@field.id
     end
     
+    def test_allowed
+      @field.allowed_values = ["one","two","three","four","mad cow","42"]
+      @field.value = "one"
+      @field.value = "mad cow"
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = 42 }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "five" }
+    end
   end # class TestField
   
   class TestTextField < TestField
@@ -32,18 +38,22 @@ module Jirarest2
       @fieldid = "customfield_10101"
       @fieldname = "issuetype"
       @fieldtype = "TextField"
+      @fieldargs = Hash.new
       @fieldrequired = true
       super
     end
     
     # This could be put to the top class but here it is anchored
     def test_fieldtype
-      assert_instance_of Jirarest2::TextField, @field
+      assert_instance_of Jirarest2Field::TextField, @field
     end
     
     def test_to_j
 #      ret = {"customfield_10101" => nil}
       ret = nil
+      assert_equal ret,@field.to_j
+      @field.value = "Lorem ipsumus"
+      ret = {"customfield_10101"=>"Lorem ipsumus"}
       assert_equal ret,@field.to_j
     end
 
@@ -52,20 +62,21 @@ module Jirarest2
       assert_equal "Lorem ipsum",@field.value
     end
 
-  end # class TestDateField
+  end # class TestTextField
 
   class TestDateTimeField < TestField
     def setup
       @fieldid = "customfield_10001"
       @fieldname = "Date Time Field"
       @fieldtype = "DateTimeField"
+      @fieldargs = Hash.new
       @fieldrequired = true
       super
     end
     
     # This could be put to the top class but here it is anchored
     def test_fieldtype
-      assert_instance_of Jirarest2::DateTimeField, @field
+      assert_instance_of Jirarest2Field::DateTimeField, @field
     end
     
     def test_set_get_value
@@ -84,6 +95,9 @@ module Jirarest2
       assert_equal  fieldiso8601,@field.value
       assert_raises(ArgumentError) { @field.value = "7.31.2012 21:24:31" }
     end
+    
+    def test_allowed
+    end
 
     def test_to_j
 #      ret = {"customfield_10001" => ""}
@@ -100,13 +114,25 @@ module Jirarest2
       @fieldid = "timespent"
       @fieldname = "Time Spent"
       @fieldtype = "NumberField"
+      @fieldargs = Hash.new
       @fieldrequired = false
       super
     end
 
     # This could be put to the top class but here it is anchored
     def test_fieldtype
-      assert_instance_of Jirarest2::NumberField, @field
+      assert_instance_of Jirarest2Field::NumberField, @field
+    end
+
+    def test_allowed
+      @field.allowed_values = ["one","two","three","four","mad cow","42",13,23,99]
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "one" }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "mad cow"}
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = 42 }
+      @field.value = "13"
+      assert_equal 13,@field.value
+      @field.value = 13
+      assert_equal 13,@field.value
     end
     
     def test_set_get_value
@@ -135,6 +161,7 @@ module Jirarest2
       @fieldid = "customfield_10006"
       @fieldname = "List select"
       @fieldtype = "HashField"
+      @fieldargs = Hash.new
       @fieldrequired = true
       @key = "value"
       @field = HashField.new(@fieldid,@fieldname,{:key => @key, :required => @fieldrequired})
@@ -142,7 +169,7 @@ module Jirarest2
     
     # This could be put to the top class but here it is anchored
     def test_fieldtype
-      assert_instance_of Jirarest2::HashField, @field
+      assert_instance_of Jirarest2Field::HashField, @field
     end
     
     def test_set_get_value
@@ -154,15 +181,15 @@ module Jirarest2
 #      ret = {"customfield_10006"=>{"value"=>nil}}
       ret = nil
       assert_equal ret, @field.to_j
-      field = Jirarest2::HashField.new("blah","mumbatz",{:key => "name"})
+      field = Jirarest2Field::HashField.new("blah","mumbatz",{:key => "name"})
       field.value = "test"
       ret = {"blah"=>{"name" => "test"}}
       assert_equal ret, field.to_j
-      field = Jirarest2::HashField.new("badfield","mineme",{:key => "key", :required => true})
+      field = Jirarest2Field::HashField.new("badfield","mineme",{:key => "key", :required => true})
       field.value = "MFTP"
       ret = {"badfield"=>{"key" => "MFTP"}}
       assert_equal ret, field.to_j
-      field = Jirarest2::HashField.new("idfield","minime",{:key => "id", :required => false})
+      field = Jirarest2Field::HashField.new("idfield","minime",{:key => "id", :required => false})
       field.value = "SP"
       ret = {"idfield"=>{"id" => "SP"}}
       assert_equal ret, field.to_j
@@ -175,6 +202,7 @@ module Jirarest2
       @fieldid = "customfield_10006"
       @fieldname = "List select"
       @fieldtype = "MultiField"
+      @fieldargs = Hash.new
       @fieldrequired = false
       super
       #      @field = HashField.new(@fieldid,@fieldname,{:key => @key, :required => @fieldrequired})
@@ -182,12 +210,42 @@ module Jirarest2
     
     # This could be put to the top class but here it is anchored
     def test_fieldtype
-      assert_instance_of Jirarest2::MultiField, @field
+      assert_instance_of Jirarest2Field::MultiField, @field
+    end
+    
+    def test_allowed_set
+      @field.allowed_values = ["one","two","three","four","mad cow","42"]
+      @field.value = "one"
+      assert_equal ["one"],@field.value
+      @field.value = "mad cow"
+      assert_equal ["mad cow"],@field.value
+      @field.value = ["one","three","42"]
+      assert_equal ["one","three","42"],@field.value
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["one","five","42"] }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["one","two",42] }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = 42 }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "five" }
     end
 
+    def test_allowed_push
+      @field.allowed_values = ["one","two","three","four","mad cow","42"]
+      @field << "one"
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field << "five" }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = 42 }
+    end
+    
+    def test_allowed_push
+      @field.allowed_values = ["one","two","three","four","mad cow","42",55,42,35,88,67]
+      @field.value = [55,42,35,88]
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field[1] = "42" }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field[1] = 23 }
+      @field[1] = 67
+      assert_equal [55, 67, 35, 88],@field.value
+    end
+    
     def test_set_get_value 
       @field.value = "Lorem ipsum"
-      assert_equal "Lorem ipsum",@field.value
+      assert_equal ["Lorem ipsum"],@field.value
       test = ["number1","number2"]
       @field.value = test
       assert_equal test,@field.value
@@ -260,21 +318,59 @@ module Jirarest2
       @field.value = ["number1","number2","number3"]
       ret = {"customfield_10006"=>["number1", "number2", "number3"]}
       assert_equal ret, @field.to_j
-
+      
     end
-   end # class TestMultiField
-
+  end # class TestMultiField
+  
+  class TestCascadingField < TestField
+    def setup
+      @fieldid = "customfield_10000"
+      @fieldname = "Cascading Select Test"
+      @fieldtype = "CascadingField"
+      @fieldargs = Hash.new
+      @fieldrequired = true
+      super
+    end
+    
+    # This could be put to the top class but here it is anchored
+    def test_fieldtype
+      assert_instance_of Jirarest2Field::CascadingField, @field
+    end
+    
+    def test_to_j
+      ret = nil
+      assert_equal ret,@field.to_j
+    end
+    
+    def test_set_get_value
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "Lorem ipsum" }
+      @field.value = ["Lorem","ipsum"]
+      assert_equal ["Lorem", "ipsum"],@field.value
+    end
+    
+    def test_allowed 
+      @field.allowed_values= { "color" => ["red","green","yellow"],"car" => ["bmw","mini","mg","vw"], "lang" => ["ruby","Java","C","C#"]}
+      @field.value = ["color","red"]
+      @field.value = ["car","mg"]
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["color","lang"] }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["color"] }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["music"] }
+      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["music","Cello"] }
+    end
+    
+  end # class TestCascadingField
+  
  end
 =begin
 customfieldtypes to check
 "datetime" # DateTimeField
 "datepicker" # DateField
 "textarea" # TextField
-"multicheckboxes"
-"cascadingselect"
+"multicheckboxes" #Multifield?
+"cascadingselect" #CascadingField
 "select" # HashField
-"multiselect"
+"multiselect" # Multifield
 "textfield" # TextField
-"multiuserpicker"
+"multiuserpicker" #MultiField
 NumberField #Number Field
 =end

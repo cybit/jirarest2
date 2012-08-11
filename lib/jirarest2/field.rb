@@ -14,17 +14,20 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-require "jirarest2/fields"
 require "jirarest2/exceptions"
-
-module Jirarest2
+# All the fieldtypes in their own namespace (hopefully easier in the documentation)
+module Jirarest2Field
   # Superclass for all fields
   class Field
     # Is this field mandatory?
+    # @return [Boolean] Default: false. True if your field has to be set for the issuetype
     attr_reader :required
-
     #The fields id in JIRA(tm)
+    # @return [String] The id in your JIRA(tm) instance
     attr_reader :id
+    # Allowed values for the fields
+    # @return [Array] The values allowed for this kind of field
+    attr_accessor :allowed_values
 
     # @attr [String] id The fields identifier in JIRA(tm)
     # @attr [String] name The fields name in JIRA(tm)
@@ -37,6 +40,10 @@ module Jirarest2
       else
         @required = false
       end
+      @allowed_values = nil
+      if args[:allowed_values] then
+        allowed_values = args[:allowed_values]
+      end
       @value = nil
     end
     
@@ -47,10 +54,24 @@ module Jirarest2
     def value(raw = false)
       return @value
     end
-    
+
+    # Checks if the value is in the list of allowed values. If the list is empty every value is allowed
+    # @param [Object] value The value to check for
+    # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
+    # @return [Boolean] true if the value is allowed, false if not
+    def value_allowed?(value)
+      return true if @allowed_values.nil? # If there is no list get out of here fast
+      if @allowed_values.include?(value) then
+        return true
+      else
+        raise Jirarest2::ValueNotAllowedException.new(@name,@allowed_values), "#{value} is not a valid value. Please use one of #{@allowed_values.join("; ").to_s}"
+      end
+    end
+
     # Set the value of the field
+    # @param [Object] content The value of this field
     def value=(content)
-      @value = content
+      @value = content if value_allowed?(content)
     end
     
     # Representation to be used for json and jira
@@ -94,7 +115,8 @@ protected
     # Set the value
     # @param [String] content The date in a string representation (Either [YY]YY-[M]M-[D]D or [D]D.[M]M.YYYY or YY.[M]M.[D]D See Date.parse) 
     def value=(content)
-      @value = Date.parse(content)
+      value = Date.parse(content)
+      @value = value if value_allowed?(value)
     end
 
     # Get the value 
@@ -113,7 +135,7 @@ protected
     # @return [Hash]
     def to_j
       if @value.nil? then
-        super (nil)
+        super(nil)
       else
         super(@value.to_s)
       end
@@ -123,7 +145,7 @@ protected
     # @return [Hash]
     def to_j_inner
       if @value.nil? then
-        super (nil)
+        super(nil)
       else
         super(@value.to_s)
       end
@@ -138,24 +160,28 @@ protected
     # Set the value
     # @param [String] content The DateTime in a string representation (Use "YYYY-MM-DD HH:MM:SS" although others like "HH:MM:SS YYYY-MM-DD" or "HH:MM:SS DD.MM.YYYY" work too. See DateTime.parse )
     def value=(content)
-      @value = DateTime.parse(content)
+      value = DateTime.parse(content)
+      @value = value if value_allowed?(value)
     end
 
 #TODO See if Jira behaves as it should. If not the output format has to be forced to YYYY-MM-DDThh:mm:ss.sTZD 
   end #class DateTimeField
 
+  # A field representing Numbers (not Strings with Numbers)
   class NumberField < TextField
     # Set the value
     # @param [String,Fixnum] content A number
     def value=(content)
       if content.instance_of?(String) then
-        @value = content.to_f 
+        value = content.to_f 
       else
-        @value = content
+        value = content
       end
+      @value = value if value_allowed?(value)
     end
   end # class NumberField
   
+  # A Field that presents its value in an hash that has additional information ("name","id","key","value")
   class HashField < TextField
 
     # @attr [String] id The fields identifier in JIRA(tm)
@@ -188,10 +214,9 @@ protected
         super(valuehash)
       end
     end
-
-    
   end # class HashField
 
+  # A field containing one or more other fields (usually only TextField or HashField)
   class MultiField < Field
     # @attr [String] id The fields identifier in JIRA(tm)
     # @attr [String] name The fields name in JIRA(tm)
@@ -200,6 +225,36 @@ protected
       super(id,name,args)
       @value = []
       @delete = false
+    end
+
+    # Checks if the value is in the list of allowed values. If the list is empty every value is allowed
+    # @param [Object] value The value to check for
+    # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
+    # @return [Boolean] true if the value is allowed, false if not
+    def value_allowed?(value)
+      return true if @allowed_values.nil? # If there is no list get out of here fast
+      if value.instance_of?(Array) then
+        value.each { |entry|
+          value_allowed?(entry)
+        }
+      else
+        if @allowed_values.include?(value) then
+          return true
+        else
+          raise Jirarest2::ValueNotAllowedException.new(@name,@allowed_values), "#{value} is not a valid value. Please use one of #{@allowed_values.join("; ").to_s}"
+        end
+      end
+    end
+    
+    # Set the value of the field
+    # @attribute [w] value
+    #   @param [Object] content The value of this field
+    #   @return [Array] All the contained fields
+    def value=(content)
+      if ! content.instance_of?(Array) then
+        content = [content]
+      end
+      super(content)
     end
 
     
@@ -211,7 +266,7 @@ protected
       else
         value.compact!
         fields = Array.new
-        if value[0].class  < Jirarest2::Field then
+        if value[0].class  < Jirarest2Field::Field then
           value.each {|field| 
             fields << field.to_j_inner
           }
@@ -244,11 +299,12 @@ protected
     # Add another field to the MultiField
     # @param [Field,String] content the content to add to the hash
     def <<(content)
+      
       if @value.length > 0  then
         raise Jirarest2::ValueNotAllowedException.new(@name,@value[0].class), "#{@value[0].class} vs #{content.class}"  if @value[0].class != content.class 
       end
       
-      @value << content
+      @value << content if value_allowed?(content)
     end
     
     # One field from the MultiField
@@ -263,13 +319,54 @@ protected
     # @raise [Jirarest2::ValueNotAllowedException] Raised if Classes of the fields are to be mixed
     def []=(index,content)
       raise Jirarest2::ValueNotAllowedException.new(@name,@value[0].class), "#{@value[0].class} vs #{content.class}" if @value[0].class != content.class 
-      @value[index] = content
+      @value[index] = content if value_allowed?(content)
+    end
+  end # class MultiField
+
+  # The class to represent CascadingSelectFields
+  class CascadingField < Field
+    # @!attribute [w] allowed_values
+    #   @attr [Hash<Array>] value The Hashes with the allowed values
+    def allowed_values=(value)
+      @allowed_values = value
+    end
+
+    # Checks if the value is in the list of allowed values. If the list is empty every value is allowed
+    # @param [Object] value The value to check for
+    # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
+    # @return [Boolean] true if the value is allowed, false if not
+    def value_allowed?(value)
+      return true if @allowed_values.nil? # If there is no list get out of here fast
+      if @allowed_values.has_key?(value[0]) && @allowed_values[value[0]].include?(value[1]) then
+        return true
+      else
+        raise Jirarest2::ValueNotAllowedException.new(@name,@allowed_values), "#{value.to_s} is not a valid value. Please use one of #{@allowed_values}"
+      end
+    end    
+
+    # Set the value of the field
+    # @!attribute [w] value
+    #  @param [Array(String,String)] content The value of this field
+    #  @raise [Jirarest2::ValueNotAllowedException] Raised if Classes of the fields are to be mixed
+    def value=(content)
+      if ! content.instance_of?(Array) or content.size != 2 then
+        raise Jirarest2::ValueNotAllowedException.new(@name,"Array"), "Needs to be an Array with exactly 2 parameters. Was #{content.class}." 
+      end
+      super
     end
     
-    
 
-     
-  end
+    # Representation to be used for json and jira
+    # @return [Hash] if the value is set
+    # @return [Nil] if the value is not set
+    def to_j
+      if @value.nil? then
+        super(nil)
+      else
+        super({"value" => @value[0], "child" => {"value" => @value[1]}})
+      end
+    end
+  end # class CascadingField
 end
 
 
