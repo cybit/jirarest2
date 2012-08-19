@@ -24,6 +24,10 @@ module Jirarest2Field
       assert_equal @fieldid,@field.id
     end
     
+    def test_name
+      assert_equal @fieldname,@field.name
+    end
+    
     def test_allowed
       @field.allowed_values = ["one","two","three","four","mad cow","42"]
       @field.value = "one"
@@ -100,7 +104,6 @@ module Jirarest2Field
     end
 
     def test_to_j
-#      ret = {"customfield_10001" => ""}
       ret = nil
       assert_equal ret,@field.to_j
       @field.value = "2011-01-31 15:25:34"
@@ -178,7 +181,6 @@ module Jirarest2Field
     end
 
     def test_to_j
-#      ret = {"customfield_10006"=>{"value"=>nil}}
       ret = nil
       assert_equal ret, @field.to_j
       field = Jirarest2Field::HashField.new("blah","mumbatz",{:key => "name"})
@@ -205,7 +207,6 @@ module Jirarest2Field
       @fieldargs = Hash.new
       @fieldrequired = false
       super
-      #      @field = HashField.new(@fieldid,@fieldname,{:key => @key, :required => @fieldrequired})
     end
     
     # This could be put to the top class but here it is anchored
@@ -227,13 +228,6 @@ module Jirarest2Field
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = "five" }
     end
 
-    def test_allowed_push
-      @field.allowed_values = ["one","two","three","four","mad cow","42"]
-      @field << "one"
-      assert_raises(Jirarest2::ValueNotAllowedException) { @field << "five" }
-      assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = 42 }
-    end
-    
     def test_allowed_push
       @field.allowed_values = ["one","two","three","four","mad cow","42",55,42,35,88,67]
       @field.value = [55,42,35,88]
@@ -277,7 +271,6 @@ module Jirarest2Field
     def test_delete_by_value
       setup_an_array
       h1 = @test[0]
-      h2 = @test[1]
       h3 = @test[2]
       h4 = @test[3]
       assert_equal [h1,h3,h4],@field.delete_by_value("minime")
@@ -309,7 +302,6 @@ module Jirarest2Field
     end
     
     def test_to_j
-      #      ret = {"customfield_10006"=>{"value"=>nil}}
       ret = nil
       assert_equal ret, @field.to_j
       setup_an_array
@@ -360,17 +352,39 @@ module Jirarest2Field
     
   end # class TestCascadingField
   
- end
+end # module
+
 =begin
-customfieldtypes to check
-"datetime" # DateTimeField
-"datepicker" # DateField
-"textarea" # TextField
-"multicheckboxes" #Multifield?
-"cascadingselect" #CascadingField
-"select" # HashField
-"multiselect" # Multifield
-"textfield" # TextField
-"multiuserpicker" #MultiField
-NumberField #Number Field
+Shouldn't be used again. Is kept here just in case
+def get_createmeta
+  require "json"
+  j = JSON.parse( IO.read("data/createmeta"))
+  string = "# -*- coding: utf-8 -*-\n"
+  string << "require \"minitest/autorun\"\n"
+  string << "require \"jirarest2/field\"\n"
+  string << "require \"json\"\n"
+  string << "require \"deb\"\n\n"
+  string << "# Extraclass to get all the different cases\n"
+  string << "class TestFieldCreatemeta < MiniTest::Unit::TestCase\n\n"
+  string << "=begin\n"
+  j["projects"][0]["issuetypes"][0]["fields"].each{ |id,cont|
+    string << "  def test_#{id}\n"
+    string << "    fstruct = \{\"#{id}\" => #{cont}\}\n"
+    string << "    ppp fstruct\n"
+    string << "    field = Jirarest2Field::TODO.new(\"#{id}\",\"#{cont["name"]}\",{:required => false, :createmeta => fstruct[\"#{id}\"]})\n"
+    string << "    ppp field\n"
+    string << "    allowed_v = [] # TODO \n"
+    string << "    assert_equal \"#{id}\", field.id\n"
+    string << "    assert_equal \"#{cont["name"]}\", field.name\n"
+    string << "    assert_equal false, field.readonly\n"
+    string << "    assert_equal \"value\", field.key\n"
+    string << "    assert_raises(NoMethodError) { field.key }\n"
+    string << "    assert_equal allowed_v, field.allowed_values\n"
+    string << "  end\n\n"
+  }
+  string << "=end\n"
+  string << "end"
+  File.open("test_fieldcreatemeta.rb", 'w') {|f| f.write(string) }
+end
 =end
+

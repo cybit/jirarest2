@@ -16,15 +16,22 @@
 
 require "jirarest2/exceptions"
 # All the fieldtypes in their own namespace (hopefully easier in the documentation)
+# @todo operations "add","set","remove" are ignored right now.
 module Jirarest2Field
   # Superclass for all fields
   class Field
     # Is this field mandatory?
     # @return [Boolean] Default: false. True if your field has to be set for the issuetype
     attr_reader :required
-    #The fields id in JIRA(tm)
+    # Is this field readonly?
+    # @return [Boolean] Default: false
+    attr_reader :readonly
+    # The field id in JIRA(tm)
     # @return [String] The id in your JIRA(tm) instance
     attr_reader :id
+    # The name given to the field (not unique in jira!)
+    # @return [String] The name in your JIRA(tm) instance
+    attr_reader :name
     # Allowed values for the fields
     # @return [Array] The values allowed for this kind of field
     attr_accessor :allowed_values
@@ -40,11 +47,15 @@ module Jirarest2Field
       else
         @required = false
       end
-      @allowed_values = nil
+      @allowed_values = []
       if args[:allowed_values] then
         allowed_values = args[:allowed_values]
       end
       @value = nil
+      @readonly = false
+      if args[:createmeta] then
+        createmeta(args[:createmeta])
+      end
     end
     
     # Get the value of the field
@@ -60,7 +71,7 @@ module Jirarest2Field
     # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
     # @return [Boolean] true if the value is allowed, false if not
     def value_allowed?(value)
-      return true if @allowed_values.nil? # If there is no list get out of here fast
+      return true if @allowed_values  == [] # If there is no list get out of here fast
       if @allowed_values.include?(value) then
         return true
       else
@@ -86,6 +97,27 @@ module Jirarest2Field
       end
     end
     
+    #Interpret the result of createmeta for one field
+    # @attr [Hash] structure  The JSON result for one field
+    def createmeta(structure)
+      @readonly = true if structure["operations"] == []
+      if structure["allowedValues"] then
+        structure["allowedValues"].flatten!(1)
+        if structure["allowedValues"][0].has_key?("value") then 
+          @key = "value"
+        elsif structure["allowedValues"][0].has_key?("name") then 
+          @key = "name"
+        elsif structure["allowedValues"][0].has_key?("key") then
+          @key = "key"
+        else
+          @key = "id"
+        end
+        structure["allowedValues"].each{ |suggestion|
+          @allowed_values << suggestion[@key]
+        }
+      end
+    end
+
 protected
     # Representation to be used for json and jira - don't return the fieldid
     # @param [String,Hash] value the to be put into the representation.
@@ -98,7 +130,6 @@ protected
         return value
       end
     end
-    
 
   end # class Field
   
@@ -168,6 +199,7 @@ protected
   end #class DateTimeField
 
   # A field representing Numbers (not Strings with Numbers)
+  # @todo See to recognize allowed - might hide in schema
   class NumberField < TextField
     # Set the value
     # @param [String,Fixnum] content A number
@@ -183,13 +215,17 @@ protected
   
   # A Field that presents its value in an hash that has additional information ("name","id","key","value")
   class HashField < TextField
+    # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
+    # @return [String] The key element for the way to Jira
+    attr_reader :key
 
     # @attr [String] id The fields identifier in JIRA(tm)
     # @attr [String] name The fields name in JIRA(tm)
     # @attr [Hash] args :key ist mandatory and a String,  :required (a Boolean if this is a mandatory field)
     #   (key should be one of "id", "key", "name", "value" )
+    # @todo How do we make sure we get the arguments wie need for our keys?
     def initialize(id,name,args)
-      @key = args[:key].downcase
+      @key = args[:key].downcase       if ! args[:createmeta] 
       super
     end
     
@@ -232,7 +268,7 @@ protected
     # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
     # @return [Boolean] true if the value is allowed, false if not
     def value_allowed?(value)
-      return true if @allowed_values.nil? # If there is no list get out of here fast
+      return true if @allowed_values == [] # If there is no list get out of here fast
       if value.instance_of?(Array) then
         value.each { |entry|
           value_allowed?(entry)
@@ -325,6 +361,9 @@ protected
 
   # The class to represent CascadingSelectFields
   class CascadingField < Field
+    # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
+    # @return [String] The key element for the way to Jira
+    attr_reader :key
     # @!attribute [w] allowed_values
     #   @attr [Hash<Array>] value The Hashes with the allowed values
     def allowed_values=(value)
@@ -336,7 +375,7 @@ protected
     # @raise [Jirarest2::ValueNotAllowedException] Raised if the value is not allowed
     # @return [Boolean] true if the value is allowed, false if not
     def value_allowed?(value)
-      return true if @allowed_values.nil? # If there is no list get out of here fast
+      return true if @allowed_values == []  # If there is no list get out of here fast
       if @allowed_values.has_key?(value[0]) && @allowed_values[value[0]].include?(value[1]) then
         return true
       else
@@ -366,7 +405,98 @@ protected
         super({"value" => @value[0], "child" => {"value" => @value[1]}})
       end
     end
+    
+    #Interpret the result of createmeta for one field
+    # @attr [Hash](structure)
+    # @note fills allowed_values with a straight list of allowed values
+    # @todo Nothing is done here yet!
+    def createmeta(structure)
+      @readonly = true if structure["operations"] == []
+      @key = "value"
+      if structure["allowedValues"] then
+        structure["allowedValues"].each{ |suggestion|
+          subentries = Array.new
+          suggestion["children"].each{ |entry|
+            subentries << entry["value"]
+          }
+          @allowed_values << {suggestion[@key] => subentries}
+        }
+      end
+    end
   end # class CascadingField
+  
+  class MultiStringField < MultiField ; end
+  class MultiHashField < MultiField 
+    # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
+    # @return [String] The key element for the way to Jira
+    attr_reader :key
+  end
+  class MultiVersionField < MultiHashField ; end 
+  # Unfortunately Users and Groups don't give us any clue as to how to set their "key" element. Therefore this own class
+  class MultiUserField < MultiHashField 
+    def initialize(id,name,args)
+      @key = "name"
+      super
+    end
+  end
+  
+  # Unfortunately Users and Groups don't give us any clue as to how to set their "key" element. Therefore this own class
+  class UserField < HashField
+    def initialize(id,name,args)
+      @key = "name"
+      super
+    end
+  end
+
+  class VersionField < HashField ;  end 
+  class ProjectField < VersionField ; end
+
+=begin
+  class CascadingSelect < CascadingField ;  end # Look for "custom" Key
+  class DateTime < DateTimeField ;  end
+  class GroupPicker < HashField ;  end
+  class ImportId ; end
+  class Labels < MultiStringField ; end 
+  class MultiGroupPicker < MultiHashField ; end
+  class MultiUserPicker < MultiHashField ; end
+  class ProjectPicker < HashField; end
+  class ReadOnlyTextField < TextField ; end
+  class SingleVersionPicker < HashField ; end
+  class URLField < TextField ; end
+  class VersionPicker < MultiHashField ; end
+  class DatePicker < DateField ; end
+  class FreeTextField < TextField ; end
+  class HiddenJobSwitch ; end
+  class JobCheckbox ; end
+  class MultiCheckboxes < MultiField ; end #unsure
+  class MultiSelect < MultiHashField ; end
+#  class NumberField < NumberField ; end
+  class RadioButtons < HashField ; end
+  class SelectList < HashField ; end
+#  class TextField < TextField ; end
+  class UserPicker < HashField ; end
+
+  class String < TextField ; end
+  class Progress ; end
+#  class Timetracking < TimeTrackingEntry ; end # "timetracking" : { "originalEstimate" : "1w2h", "remainingEstimate" : "3h23m" }
+  class Issuetype < HashField ; end
+  class Number < NumberField ; end
+  class User < UserPicker ; end
+#  class Datetime  ; end # See above
+  class Priority < TextField ; end
+  class Date < DateField ; end
+  class Array < MultiField ; end # Never alone always with an items parameter
+  class Status ; end
+  class Project < HashField ; end 
+  class Component ; end
+  class Comment ; end
+  class Votes ; end
+  class Resolution < TextField ; end
+  class Version < HashField ; end
+  class Watches ; end
+  class Worklog ; end
+  class Attachment ; end # readonly
+=end
 end
 
 

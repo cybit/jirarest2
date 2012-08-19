@@ -67,4 +67,7 @@ module Jirarest2
   # A field that is defined as "required" has not been given a value
   class RequiredFieldNotSetException < ArgumentError; end
 
+  #Could not determine the right fieldtype as this seems to be new
+  class CouldNotDetermineFieldtypeException < ArgumentError; end
+
 end

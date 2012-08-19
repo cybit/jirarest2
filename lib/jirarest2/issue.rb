@@ -61,5 +61,10 @@ class Issue
     set_assignee(connection, nil)
   end
 
+  # Interpret the result of createmeta for one issuetype
+  # @attr [Hash] issuetype one issutype resulting from createmeta
+  def createmeta(issuetype)
+    @name = issuetype
+  end
 
 end # Issue
