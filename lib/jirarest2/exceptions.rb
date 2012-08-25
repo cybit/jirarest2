@@ -69,5 +69,7 @@ module Jirarest2
 
   #Could not determine the right fieldtype as this seems to be new
   class CouldNotDetermineFieldtypeException < ArgumentError; end
+  #Hashfiels always have to have a key assigned to them
+  class HashKeyMissingException < ArgumentError; end
 
 end

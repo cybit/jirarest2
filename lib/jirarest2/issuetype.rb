@@ -59,7 +59,7 @@ class Issuetype
     when "resolution"
       return "HashField"
     when "timetracking"
-      return "TextField"
+      return "TimetrackingField"
     when "array"
       case schema["items"]
       when "version"
@@ -114,7 +114,7 @@ class Issuetype
       raise Jirarest2::CouldNotDetermineFieldtypeException schema
     end
 
-  end
+  end # def decipher_schema
 
   # Interpret the result of createmeta for one issuetype
   # @attr [Hash] issuetype The JSON result for one issuetype
@@ -136,5 +136,28 @@ class Issuetype
     }
   end
 
+  
+  # Interpret the result to the request for an existing issue
+  # @attr [Hash] json The hashed json body of the request
+  # @raise [Jirarest2::FieldsUnknownError] Raised if the fields to this issuetype is unknown
+  # @todo Is this not really Issue instead of Issuetype?
+  def decode_issue(json)
+    if (@fields.nil? or @fields == {}) then 
+      # Prepare the fields
+      if json.has_key?("schema") then
+        createmeta(json["schema"])
+      elsif  json.has_key?("editmeta") then
+        createmeta(json["editmeta"])
+      else
+        # We need to know what to fill and how
+        raise Jirearesr2::FieldsUnknownError json["self"]
+      end
+    end
+    @issuekey = json["key"]
+    json["fields"].each{ |field_id,content|
+      @fields["field_id"].parse_value(content)
+    }
+    
+  end # def decode_issue
 
 end # class Issuetype

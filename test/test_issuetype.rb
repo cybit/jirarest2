@@ -23,7 +23,7 @@ class TestIssuetype < MiniTest::Unit::TestCase
     assert_equal 4, @issue.required_fields.size
     assert_equal 44, @issue.fields.size
     # Some order as in test_fieldcreatemeta.rb
-    fieldtypes = ["TextField", "TextField", "TextField", "VersionField", "TextField", "MultiVersionField", "HashField", "MultiUserField", "NumberField", "TextField", "ProjectField", "HashField", "MultiVersionField", "UserField", "TextField", "HashField", "DateTimeField", "DateField", "DateField", "TextField", "TextField", "NumberField", "MultiHashField", "NumberField", "CascadingField", "TextField", "TextField", "TextField", "HashField", "MultiHashField", "MultiStringField", "UserField", "UserField", "UserField", "HashField", "HashField", "MultiStringField", "MultiUserField", "ProjectField", "MultiVersionField", "TextField", "UserField", "NumberField", "MultiHashField"]
+    fieldtypes = ["TextField", "TextField", "TimetrackingField", "VersionField", "TextField", "MultiVersionField", "HashField", "MultiUserField", "NumberField", "TextField", "ProjectField", "HashField", "MultiVersionField", "UserField", "TextField", "HashField", "DateTimeField", "DateField", "DateField", "TextField", "TextField", "NumberField", "MultiHashField", "NumberField", "CascadingField", "TextField", "TextField", "TextField", "HashField", "MultiHashField", "MultiStringField", "UserField", "UserField", "UserField", "HashField", "HashField", "MultiStringField", "MultiUserField", "ProjectField", "MultiVersionField", "TextField", "UserField", "NumberField", "MultiHashField"]
     (0..@issue.fields.size-1).each{ |i|
       assert_equal "Jirarest2Field::"+fieldtypes[i], @issue.fields.values[i].class.to_s
     }

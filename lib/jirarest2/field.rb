@@ -32,6 +32,9 @@ module Jirarest2Field
     # The name given to the field (not unique in jira!)
     # @return [String] The name in your JIRA(tm) instance
     attr_reader :name
+    # The raw value
+    # @return [Hash] The value in it's raw form
+    attr_reader :raw_value 
     # Allowed values for the fields
     # @return [Array] The values allowed for this kind of field
     attr_accessor :allowed_values
@@ -118,6 +121,13 @@ module Jirarest2Field
       end
     end
 
+    # Parse the value of this field as sent by the server
+    # @attr [String,Hash,Array] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      @rawvalue = jvalue
+      @value = jvalue
+    end
+
 protected
     # Representation to be used for json and jira - don't return the fieldid
     # @param [String,Hash] value the to be put into the representation.
@@ -172,6 +182,13 @@ protected
       end
     end
 
+    # Parse the value of this field as sent by the server
+    # @attr [String] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      super
+      @value = Date.parse(jvalue)
+    end
+    
     # Representation to be used for json and jira without the fieldId
     # @return [Hash]
     def to_j_inner
@@ -193,6 +210,13 @@ protected
     def value=(content)
       value = DateTime.parse(content)
       @value = value if value_allowed?(value)
+    end
+
+    # Parse the value of this field as sent by the server
+    # @attr [String] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      super
+      @value = DateTime.parse(jvalue)
     end
 
 #TODO See if Jira behaves as it should. If not the output format has to be forced to YYYY-MM-DDThh:mm:ss.sTZD 
@@ -223,10 +247,11 @@ protected
     # @attr [String] name The fields name in JIRA(tm)
     # @attr [Hash] args :key ist mandatory and a String,  :required (a Boolean if this is a mandatory field)
     #   (key should be one of "id", "key", "name", "value" )
-    # @todo How do we make sure we get the arguments wie need for our keys?
+    # @raises [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
     def initialize(id,name,args)
-      @key = args[:key].downcase       if ! args[:createmeta] 
+      @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
+      raise Jirarest2::HashKeyMissingException, "HashTypes like in #{id} alway require a key!" if @key.nil? 
     end
     
     # Representation to be used for json and jira
@@ -239,6 +264,19 @@ protected
         super(valuehash)
       end
     end
+    
+    # Parse the value of this field as sent by the server
+    # @attr [String,Hash,Array] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      super
+      if jvalue.nil? then 
+        @value = nil 
+      else
+        @value = jvalue[key] 
+      end
+    end
+
+
 
     # Representation to be used for json and jira without the fieldID
     # @return [Hash] if value is set
@@ -250,6 +288,7 @@ protected
         super(valuehash)
       end
     end
+
   end # class HashField
 
   # A field containing one or more other fields (usually only TextField or HashField)
@@ -312,7 +351,7 @@ protected
         super(fields)
       end
     end
-    
+
     # Delete items
     # @param [Object] object The object to delete (If the object is self it all fields and sets @delete)
     # @return The deleted object
@@ -405,6 +444,13 @@ protected
         super({"value" => @value[0], "child" => {"value" => @value[1]}})
       end
     end
+
+    # Parse the value of this field as sent by the server
+    # @attr [Array] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      super
+      @value = [jvalue["value"],jvalue["child"]["value"]]
+    end
     
     #Interpret the result of createmeta for one field
     # @attr [Hash](structure)
@@ -430,6 +476,27 @@ protected
     # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
     # @return [String] The key element for the way to Jira
     attr_reader :key
+
+    # @attr [String] id The fields identifier in JIRA(tm)
+    # @attr [String] name The fields name in JIRA(tm)
+    # @attr [Hash] args, :required if this is a mandatory field
+    # @raises [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
+    def initialize(id,name,args)
+      @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
+      super
+      raise Jirarest2::HashKeyMissingException, "HashTypes like in #{id} always require a key!" if @key.nil? 
+    end
+    
+    # Parse the value of this field as sent by the server
+    # @attr [Array] jvalue The part of the response that is connected to this instance
+    def parse_value(jvalue)
+      @rawvalue = jvalue
+      jvalue.each{ |item|
+        @value << item[@key]
+      }
+    end
+    
+
   end
   class MultiVersionField < MultiHashField ; end 
   # Unfortunately Users and Groups don't give us any clue as to how to set their "key" element. Therefore this own class
@@ -449,7 +516,12 @@ protected
   end
 
   class VersionField < HashField ;  end 
+  # @todo Shouldn't with projects the item to choose be the key and not the name?
   class ProjectField < VersionField ; end
+
+  # Timetracking is very special
+  # @todo This class is not really doing anything usefull
+  class TimetrackingField < Field; end
 
 =begin
   class CascadingSelect < CascadingField ;  end # Look for "custom" Key
@@ -483,7 +555,7 @@ protected
   class Number < NumberField ; end
   class User < UserPicker ; end
 #  class Datetime  ; end # See above
-  class Priority < TextField ; end
+  class Priority < TextField ; end # Not HashField?
   class Date < DateField ; end
   class Array < MultiField ; end # Never alone always with an items parameter
   class Status ; end
