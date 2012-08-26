@@ -130,7 +130,7 @@ end # class ParseOptions
 
 
 def no_issue(type,issue)
-  puts "The #{type}type you entered (\"#{issue}\")  does no exist."
+  puts "The #{type}type you entered (\"#{issue}\")  does not exist."
     puts "Maybe you entered the wrong type or made a typo? (Case is relevant!)"
     exit 1
 end
@@ -148,9 +148,9 @@ def open_issue
     end
     @connection,issue =  Jirarest2Bin::command(@scriptopts,@connection,:issue,@issueopts.project,@issueopts.issue)
   rescue Jirarest2::WrongProjectException => e
-    no_issue("project",e)
+    no_issue("project",@issueopts.project)
   rescue Jirarest2::WrongIssuetypeException => e
-    no_issue("project",e)
+    no_issue("issue",@issueopts.issue)
   end
   return issue
 end
@@ -172,6 +172,7 @@ def show_scheme
 end
 
 # Split the content from the command line parameter "-c"
+# TODO coupling is way to strong here. Fucks up.
 def split_content(issue)
   fields = Hash.new
   @issueopts.content.each { |value|

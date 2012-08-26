@@ -50,7 +50,6 @@ class TestNewIssue < MiniTest::Unit::TestCase
     issue.set_field("List select","Räuber")
     issue.set_field("Multi Select",["Glocke","Kabale und Liebe"])
     blankissue = issue.jirahash
-    assert blankissue
     assert_equal "MFTP", blankissue["fields"]["project"]["key"]
     assert_equal "Summary Text", issue.get_field("Summary")
   end
@@ -60,7 +59,7 @@ class TestNewIssue < MiniTest::Unit::TestCase
     issue = @existentIssue
     issue.set_field("Summary","Summary Text")
     issue.set_field("Priority","Trivial")
-    stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issue/").with(:body => "{\"fields\":{\"project\":{\"key\":\"MFTP\"},\"summary\":\"Summary Text\",\"priority\":{\"name\":\"Trivial\"},\"issuetype\":{\"name\":\"My issue type\"}}}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 201, :body => '{"id":"10608","key":"MFTP-11","self":"http://localhost:2990/jira/rest/api/2/issue/10608"}', :headers => {})
+    stub_request(:post, "http://test:1234@localhost:2990/jira/rest/api/2/issue/").with(:body => "{\"fields\":{\"summary\":\"Summary Text\",\"issuetype\":{\"name\":\"My issue type\"},\"project\":{\"key\":\"MFTP\"},\"priority\":{\"name\":\"Trivial\"}}}",:headers => {'Accept'=>'*/*', 'Content-Type'=>'application/json;charset=UTF-8', 'User-Agent'=>'Ruby'}).to_return(:status => 201, :body => '{"id":"10608","key":"MFTP-11","self":"http://localhost:2990/jira/rest/api/2/issue/10608"}', :headers => {})
 
     issue.persist(@connect)
   end

@@ -116,6 +116,7 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     assert_equal "Issue Type", field.name
     assert_equal true, field.readonly
     assert_equal "name", field.key
+    assert_equal "My issue type", field.value
     assert_equal allowed_v, field.allowed_values
   end
   def test_parse_value_issuetype
@@ -176,11 +177,12 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
   def test_customfield_10304 # project -> ProjectField
     fstruct = {"customfield_10304" => {"required"=>false, "schema"=>{"type"=>"project", "custom"=>"com.atlassian.jira.plugin.system.customfieldtypes:project", "customId"=>10304}, "name"=>"Project Picket Field", "operations"=>["set"], "allowedValues"=>[[{"self"=>"http://localhost:2990/jira/rest/api/2/project/MFTP", "id"=>"10000", "key"=>"MFTP", "name"=>"My first Test Project", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/projectavatar?size=small&pid=10000&avatarId=10011", "48x48"=>"http://localhost:2990/jira/secure/projectavatar?pid=10000&avatarId=10011"}}, {"self"=>"http://localhost:2990/jira/rest/api/2/project/SP", "id"=>"10100", "key"=>"SP", "name"=>"Second Project", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/projectavatar?size=small&pid=10100&avatarId=10011", "48x48"=>"http://localhost:2990/jira/secure/projectavatar?pid=10100&avatarId=10011"}}]]}}
     field = Jirarest2Field::ProjectField.new("customfield_10304","Project Picket Field",{:required => false, :createmeta => fstruct["customfield_10304"]})
-    allowed_v = ["My first Test Project", "Second Project"] 
+#    allowed_v = ["My first Test Project", "Second Project"] 
+    allowed_v = ["MFTP", "SP"] 
     assert_equal "customfield_10304", field.id
     assert_equal "Project Picket Field", field.name
     assert_equal false, field.readonly
-    assert_equal "name", field.key
+    assert_equal "key", field.key
     assert_equal allowed_v, field.allowed_values
   end
   def test_parse_value_customfield_10304
@@ -625,11 +627,12 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
   def test_project # project -> ProjectField
     fstruct = {"project" => {"required"=>true, "schema"=>{"type"=>"project", "system"=>"project"}, "autoCompleteUrl"=>"Project", "operations"=>["set"], "allowedValues"=>[{"self"=>"http://localhost:2990/jira/rest/api/2/project/MFTP", "id"=>"10000", "key"=>"MFTP", "name"=>"My first Test Project", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/projectavatar?size=small&pid=10000&avatarId=10011", "48x48"=>"http://localhost:2990/jira/secure/projectavatar?pid=10000&avatarId=10011"}}]}}
     field = Jirarest2Field::ProjectField.new("project","",{:required => false, :createmeta => fstruct["project"]})
-    allowed_v = ["My first Test Project"] # TODO 
+    allowed_v = ["MFTP"] # TODO 
     assert_equal "project", field.id
     assert_equal "", field.name
     assert_equal false, field.readonly
-    assert_equal "name", field.key
+    assert_equal "key", field.key
+    assert_equal "MFTP", field.value
     assert_equal allowed_v, field.allowed_values
   end
   def test_parse_value_project
@@ -717,6 +720,13 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiHashField.new("components","Component/s",{:required => false, :key => "name"})
     field.parse_value( [{"self"=>"http://localhost:2990/jira/rest/api/2/component/10001", "id"=>"10001", "name"=>"Sissi", "description"=>"Another Component"}])
     assert_equal ["Sissi"],field.value
+  end
+
+  def test_allowedValues_empty
+    fstruct = {"allowed_empty" => {"required"=>false, "schema"=>{"type"=>"array", "items"=>"version", "system"=>"versions"}, "name"=>"Affects Version/s", "operations"=>["set", "add", "remove"], "allowedValues"=>[]}}
+    field = Jirarest2Field::MultiVersionField.new("allowed_empty","AllowedValues empty",{:required => false, :createmeta => fstruct["allowed_empty"]})
+    allowed_v = []
+    assert_equal allowed_v, field.allowed_values
   end
 
 end

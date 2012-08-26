@@ -101,23 +101,33 @@ module Jirarest2Field
     end
     
     #Interpret the result of createmeta for one field
+    # If there is only one value allowed this value will be set
     # @attr [Hash] structure  The JSON result for one field
     def createmeta(structure)
       @readonly = true if structure["operations"] == []
       if structure["allowedValues"] then
         structure["allowedValues"].flatten!(1)
-        if structure["allowedValues"][0].has_key?("value") then 
-          @key = "value"
-        elsif structure["allowedValues"][0].has_key?("name") then 
-          @key = "name"
-        elsif structure["allowedValues"][0].has_key?("key") then
-          @key = "key"
+        if ! structure["allowedValues"][0].nil? then
+        
+          if structure["allowedValues"][0].has_key?("value") then 
+            @key = "value"
+          elsif structure["allowedValues"][0].has_key?("key") then
+            @key = "key"
+          elsif structure["allowedValues"][0].has_key?("name") then 
+            @key = "name"
+          else
+            @key = "id"
+          end
+          structure["allowedValues"].each{ |suggestion|
+            @allowed_values << suggestion[@key]
+          }
+          if structure["allowedValues"].size == 1 && !structure["allowedValues"][0].instance_of?(Array) then # If there is only one value allowed it might as well be set at the earliest convenience
+            @value = structure["allowedValues"][0][@key] 
+          end
         else
-          @key = "id"
+          @key = ""
+          @allowed_values == []
         end
-        structure["allowedValues"].each{ |suggestion|
-          @allowed_values << suggestion[@key]
-        }
       end
     end
 
@@ -247,7 +257,7 @@ protected
     # @attr [String] name The fields name in JIRA(tm)
     # @attr [Hash] args :key ist mandatory and a String,  :required (a Boolean if this is a mandatory field)
     #   (key should be one of "id", "key", "name", "value" )
-    # @raises [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
+    # @raise [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
     def initialize(id,name,args)
       @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
@@ -480,7 +490,7 @@ protected
     # @attr [String] id The fields identifier in JIRA(tm)
     # @attr [String] name The fields name in JIRA(tm)
     # @attr [Hash] args, :required if this is a mandatory field
-    # @raises [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
+    # @raise [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
     def initialize(id,name,args)
       @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
@@ -516,8 +526,18 @@ protected
   end
 
   class VersionField < HashField ;  end 
-  # @todo Shouldn't with projects the item to choose be the key and not the name?
-  class ProjectField < VersionField ; end
+
+  # Projects are a little bit special
+  class ProjectField < VersionField 
+=begin
+    def createmeta(structure)
+      super
+      if ! structure["allowedValues"][0].instance_of?(Array) then # If there is only one value allowed it might as well be set at the earliest convenience
+        @value = structure["allowedValues"][0]["key"] 
+      end
+    end
+=end
+  end
 
   # Timetracking is very special
   # @todo This class is not really doing anything usefull

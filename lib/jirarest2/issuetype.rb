@@ -18,13 +18,13 @@ require_relative "field"
 
 # Keep track of one Issuetype
 class Issuetype
-  # Name of the issuetype
+  # @return [String] The name of the issuetype
   attr_reader :name
-  # Description
+  # @return [String] The description for this issuetype
   attr_reader :description
-  # All the fields in this issuetype
+  # @return [Array<Hash>] All the fields in this issuetype
   attr_reader :fields
-  # All the required fields in this issuetype
+  # @return [Array] All the required fields in this issuetype
   attr_reader :required_fields
   
   #Get the correct Fieldtype based on the schema from createmeta
@@ -118,9 +118,14 @@ class Issuetype
 
   # Interpret the result of createmeta for one issuetype
   # @attr [Hash] issuetype The JSON result for one issuetype
+  # @raise [Jirarest2::WrongIssuetypeException] Raised if the issuetype is not found in the answer
   # @todo As the name and not the id of the field is used here some fields might get lost. There should be some way around while still enabling the use of names for external calls
   def createmeta(issuetype)
-    @name = issuetype["name"]
+    if issuetype.nil? || issuetype["name"].nil? then
+      raise Jirarest2::WrongIssuetypeException
+    else
+      @name = issuetype["name"]
+    end
     @description = issuetype["description"]
     @fields = Hash.new
     @required_fields = Array.new
@@ -141,6 +146,7 @@ class Issuetype
   # @attr [Hash] json The hashed json body of the request
   # @raise [Jirarest2::FieldsUnknownError] Raised if the fields to this issuetype is unknown
   # @todo Is this not really Issue instead of Issuetype?
+  # @todo I need name of the issuetype if possible
   def decode_issue(json)
     if (@fields.nil? or @fields == {}) then 
       # Prepare the fields
@@ -157,7 +163,75 @@ class Issuetype
     json["fields"].each{ |field_id,content|
       @fields["field_id"].parse_value(content)
     }
-    
   end # def decode_issue
+
+
+  #Set the value of a field
+  # @param [String] id The name of the field
+  # @param [String,Array] value The value of the field
+  # @param [Symbol] denom Field identifier to use (:name or :id)
+  def set_value(id,value,denom = :name)
+    field = get_field(id,denom)
+    field.value = value
+  end
+
+  # Get the value of a field
+  # @param [String] id The name of the field
+  # @return [String,Array] value The value of the field
+  # @param [Symbol] denom Field identifier to use (:name or :id)
+  def get_value(id,denom = :name)
+    field = get_field(id,denom)
+    return field.value
+  end
+
+  
+
+  #check if all the required fields have values
+  # The following fields are not seen as required in this method because JIRA (tm) sets it's own defaults: project, issuetype, reporter
+  # @param [Boolean] only_empty If set to true will only return those Names where the value is empty
+  # @return [Array] Names of all the required_fields that have no value assigned, empty if all fields have a value
+  def required_by_name(only_empty = false)
+    empty = Array.new
+    @required_fields.each{ |field|
+      empty << field.name if (field.value.nil? || ! only_empty ) && !field.name.nil? && field.id != "issuetype" && field.id != "reporter" 
+    }
+    return empty
+  end
+
+  #Build up a hash to give to jira to create a new ticket
+  # @return [Hash] Hash to be sent to the server
+  # @raise [Jirarest2::RequiredFieldNotSetException] Raised if a required field is not set
+  # @todo NOT finished
+  def new_ticket_hash
+    missing_fields = required_by_name(true)
+    if missing_fields == [] then
+      fields = Hash.new
+      @fields.each { |id,field| 
+        fields = fields.merge!(field.to_j) if ! field.to_j.nil? #Sending empty fields with a new ticket will not work
+      }
+      h = {"fields" => fields}
+      return h
+    else
+      raise Jirarest2::RequiredFieldNotSetException, missing_fields
+    end
+  end
+
+private
+  # Get the field based on the id and the denominator (:id or :name)
+  # @param [String] id The name of the field
+  # @param [Symbol] denom Field identifier to use (:name or :id)
+  def get_field(id,denom = :name)
+    working_id = id
+    if denom == :name then
+      working_id =  @field_name_id[id] 
+    end
+    field = @fields[working_id]
+    if field.nil? then # Try if it's has been the id all along
+      field = @fields[id]
+    end
+    raise Jirarest2::WrongFieldnameException, id if field.nil?
+    return field
+  end
+
 
 end # class Issuetype
