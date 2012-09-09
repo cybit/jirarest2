@@ -216,6 +216,25 @@ class Issuetype
     end
   end
 
+  # Return the fieldtype (Multitype as "array" nostly for backwards compability)
+  # @attr [String] fieldname The Name of the field
+  # @return [String] The fieldtype as String. MultiField types and CascadingField are returned as "array"
+  def fieldtype(fieldname)
+    ftype =  get_field(fieldname,:name).class.to_s
+    ftype =~ /^.*::(\w+)Field$/
+    ftshort = $1
+    case ftshort
+    when /Multi.*/
+      return "array"
+    when "Cascading"
+      return "array"
+    else
+      return ftshort
+    end
+  end
+  
+
+
 private
   # Get the field based on the id and the denominator (:id or :name)
   # @param [String] id The name of the field

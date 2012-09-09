@@ -18,7 +18,7 @@
 require_relative "issuetype"
 
 # class to handle new issues (building them up, changing fields, persistence)
-class NewIssue
+class NewIssue 
     
   # issue type of the issue 
   attr_reader :issuetype
@@ -105,5 +105,11 @@ class NewIssue
     return success
   end
 
+  # Return the fieldtype (Multitype as "array" nostly for backwards compability)
+  # @attr [String] fieldname The Name of the field
+  # @return [String] The fieldtype as String. MultiField types and CascadingField are returned as "array"
+  def fieldtype(fieldname)
+    return @issue.fieldtype(fieldname)
+  end
   
 end # class

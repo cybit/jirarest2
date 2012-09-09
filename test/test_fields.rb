@@ -341,7 +341,7 @@ module Jirarest2Field
     end
     
     def test_allowed 
-      @field.allowed_values= { "color" => ["red","green","yellow"],"car" => ["bmw","mini","mg","vw"], "lang" => ["ruby","Java","C","C#"]}
+      @field.allowed_values= [{ "color" => ["red","green","yellow"],"car" => ["bmw","mini","mg","vw"], "lang" => ["ruby","Java","C","C#"]}]
       @field.value = ["color","red"]
       @field.value = ["car","mg"]
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["color","lang"] }

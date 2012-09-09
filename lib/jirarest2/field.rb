@@ -108,7 +108,6 @@ module Jirarest2Field
       if structure["allowedValues"] then
         structure["allowedValues"].flatten!(1)
         if ! structure["allowedValues"][0].nil? then
-        
           if structure["allowedValues"][0].has_key?("value") then 
             @key = "value"
           elsif structure["allowedValues"][0].has_key?("key") then
@@ -286,8 +285,6 @@ protected
       end
     end
 
-
-
     # Representation to be used for json and jira without the fieldID
     # @return [Hash] if value is set
     def to_j_inner(value = @value)
@@ -344,9 +341,9 @@ protected
 
     
     # Return for JSON representation
-    # if @value == [] and @delete is false set super will return nil
+    # if @value == [] or nil and @delete is false set super will return nil
     def to_j(value = @value)
-      if ((value == []) and ! @delete) then
+      if ((value == [] || value.nil?) and ! @delete) then
         super(nil)
       else
         value.compact!
@@ -425,7 +422,7 @@ protected
     # @return [Boolean] true if the value is allowed, false if not
     def value_allowed?(value)
       return true if @allowed_values == []  # If there is no list get out of here fast
-      if @allowed_values.has_key?(value[0]) && @allowed_values[value[0]].include?(value[1]) then
+      if @allowed_values[0].has_key?(value[0]) && @allowed_values[0][value[0]].include?(value[1]) then
         return true
       else
         raise Jirarest2::ValueNotAllowedException.new(@name,@allowed_values), "#{value.to_s} is not a valid value. Please use one of #{@allowed_values}"
@@ -438,7 +435,7 @@ protected
     #  @raise [Jirarest2::ValueNotAllowedException] Raised if Classes of the fields are to be mixed
     def value=(content)
       if ! content.instance_of?(Array) or content.size != 2 then
-        raise Jirarest2::ValueNotAllowedException.new(@name,"Array"), "Needs to be an Array with exactly 2 parameters. Was #{content.class}." 
+        raise Jirarest2::ValueNotAllowedException.new(@name,"Array"), "needs to be an Array with exactly 2 parameters. Was #{content.class}." 
       end
       super
     end
@@ -481,7 +478,11 @@ protected
     end
   end # class CascadingField
   
+  # At the moment it's only there to keep the HashField company
   class MultiStringField < MultiField ; end
+
+  # Hash Fields are always somewhat different to normal fields
+  # @todo to_j is shot
   class MultiHashField < MultiField 
     # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
     # @return [String] The key element for the way to Jira
@@ -491,6 +492,8 @@ protected
     # @attr [String] name The fields name in JIRA(tm)
     # @attr [Hash] args, :required if this is a mandatory field
     # @raise [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
+    # @todo Test to not really work for to_j
+    # @todo Hash_identifier is not alway "name", we should have some "value" fields as well. Whole thing needs to be rewritten work with HashFields as parts
     def initialize(id,name,args)
       @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
@@ -505,10 +508,45 @@ protected
         @value << item[@key]
       }
     end
-    
+
+    # Return for JSON representation
+    # if @value == [] or nil and @delete is false set super will return nil
+    def to_j(value = @value)
+      if ((value == [] || value.nil?) and ! @delete) then
+        super(nil)
+      else
+        value.compact!
+        fields = Array.new
+        if value[0].class  < Jirarest2Field::Field then # This is how it should be 
+          value.each {|field| 
+            fields << field.to_j_inner
+          }
+        else 
+          value.each{ |field|
+            f = HashField.new("10000a",field,{:createmeta => {"operations" => ["set"], "allowedValues" => [{"name" => field}] } })
+            fields << f.to_j_inner
+          }
+        end
+        super(fields)
+      end
+    end
+
+    # Representation to be used for json and jira without the fieldID
+    # @return [Hash] if value is set
+    def to_j_inner(value = @value)
+      if value.nil? then
+        super(nil)
+      else
+        valuehash = {@key => value}
+        super(valuehash)
+      end
+    end
 
   end
+
+  # Versions might behave in another way somewhere
   class MultiVersionField < MultiHashField ; end 
+
   # Unfortunately Users and Groups don't give us any clue as to how to set their "key" element. Therefore this own class
   class MultiUserField < MultiHashField 
     def initialize(id,name,args)

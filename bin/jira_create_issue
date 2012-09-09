@@ -225,8 +225,7 @@ def prepare_new_ticket
   rescue Jirarest2::WrongFieldnameException => e
     no_issue("field",e)
   rescue Jirarest2::ValueNotAllowedException => e
-    puts "Value #{e} not allowed for field #{e.fieldname}."
-    puts "Please use one of: \"" + e.allowed.join("\", \"") + "\""
+    puts "Problem with #{e.fieldname}: Value #{e}"
     valueNotAllowedRaised = true
   end
 
