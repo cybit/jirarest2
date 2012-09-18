@@ -1,3 +1,21 @@
+=== 0.0.13 / 2012-09-18
+
+* 1 major enhancement:
+
+  * Field types are now somewhat mirrored from the server - This should enable working with different fieldtypes without the "expected an object" error. Hopefu
+
+* 2 minor enhancements:
+
+  * Added feature to see if we are really authenticated. Had to change credentials around a bit for that.
+  * Added fieldtypes for the known fields with support for allowed values
+
+* 4 unknowns:
+
+  * Added reading of values for fields from the json results
+  * Fixed a bug with authentication but found a new bug that is not fixed yet ( #25 )
+  * Some minor work on tests and warnings
+  * Some work on documentation
+
 === 0.0.12 / 2012-08-07
 
 * 1 major enhancement:
