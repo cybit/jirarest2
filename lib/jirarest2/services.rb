@@ -20,7 +20,7 @@ require_relative "connect"
 #  Trying to keep the services together in one class so I don't have to write so much
 class Services
 
-  # @param [Connection]
+  # @param [Connection] connection A connection Object
   def initialize(connection)
     @connection = connection
 # to be set in each subclass;

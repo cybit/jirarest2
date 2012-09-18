@@ -15,10 +15,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-=begin
-# An Issue object contains all the data of an issue
-=end
-class NewIssue
+require_relative "issuetype"
+
+# class to handle new issues (building them up, changing fields, persistence)
+class NewIssue 
     
   # issue type of the issue 
   attr_reader :issuetype
@@ -30,205 +30,67 @@ class NewIssue
   # @param [String] project Key of the JIRA(tm) project the issue belongs to
   # @param [String] type Issuetype the issue belongs to
   # @param [Connection] connection
+  # @raise [Jirarest2::WrongProjectException] Raised of the project type is not found in the answer
   def initialize (project,type,connection)
     query = {:projectKeys => project, :issuetypeNames => type, :expand => "projects.issuetypes.fields" }
     answer = connection.execute("Get","issue/createmeta/",query)
     jhash = answer.result
-    parse_json(jhash)
-    raise Jirarest2::WrongProjectException, project if @project == ""
-    raise Jirarest2::WrongIssuetypeException, type if @issuetype == ""
+    begin
+      @project = jhash["projects"][0]["key"]
+    rescue NoMethodError
+      raise Jirarest2::WrongProjectException, project 
+    end
+    @issue = Issuetype.new
+    @issue.createmeta(jhash["projects"][0]["issuetypes"][0])
+    @issuetype = @issue.name
   end
 
-  # produces an instance-variable @issuefields that can be 
-  # @param [Hash] jhash Hashed version of the json-snippet JIRA(tm) returns
-  def parse_json (jhash)
-    @issuefields = Hash.new
-    @project = ""
-    @issuetype = ""
-    jhash["projects"].each { |value|
-      @project = value["key"]
-      value["issuetypes"].each { |value1|
-        @issuetype = value1["name"]
-        value1["fields"].delete("project") #The project key is duplicate and will make our live harder afterwards. It is marked as required but nothing happens if this key is not set.
-        value1["fields"].each { |key,value2|
-          fields = Hash.new
-          fields["id"] = key
-          if value2["name"] then
-            name = value2["name"]
-          else
-            name = key
-          end
-          # If the allowed reponses are limited we want to know them.
-          if value2["allowedValues"] then
-            # With custom fields the identifier is "value" with the built in ones it's "name"
-            identifier = "name"
-            if value2["schema"]["custom"] then
-              identifier = "value"
-            end
-            allowedValues = Array.new
-            value2["allowedValues"].each { |value3|
-              allowedValues << value3[identifier]
-            } # value3
-            fields["allowedValuesIdentifier"] = identifier
-            fields["allowedValues"] = allowedValues
-          end
-          fields["required"] = value2["required"] 
-          fields["type"] = value2["schema"]["type"]
-          @issuefields[name] = fields if name != "Issue Type" # "Issue Type" is not really a required field as we have to assign it at another place anyway
-        } # value1
-      } # value
-    } # jhash
-  end
-  
-  # @param [String] field Name of the field
-  # @return [String] type of the Field 
-  def fieldtype(field)
-    # If the fieldname is wrong we want to tell this and stop execution (or maybe let the caller fix it)
-    if @issuefields[field].nil? then
-      raise Jirarest2::WrongFieldnameException, field
-    else
-      return @issuefields[field]["type"]
-    end
-  end
-  
   # @return [Array] Names of required fields
   def get_requireds
-    names = Array.new
-    @issuefields.each {|key,value|
-      if value["required"] then
-        names << key
-      end
-    }
-    return names
+    return @issue.required_by_name
   end
 
   # @return [Array] Names of all fields
   def get_fieldnames
     names = Array.new
-    @issuefields.each {|key,value|
-        names << key
+    @issue.fields.each {|id,field|
+      names << field.name
     }
     return names
   end
 
-  # @param [String] name Name of a field
-  # @return [String] id of the field
-  protected
-  def get_id(name)
-    return @issuefields["name"]["id"]
-  end
-
-=begin
-# query=
-# {"fields"=>
-#  { "project"=>{"key"=>"MFTP"}, 
-#    "environment"=>"REST ye merry gentlemen.", 
-#    "My own text"=>"Creating of an issue using project keys and issue type names using the REST API",
-#    "issuetype"=> {"name"=>"My own type"}
-#  }
-# }
-=end
-
+  # take this classes representation of an issue and make it presentable to JIRA(tm)
   # @return [Hash] Hash to be sent to JIRA(tm) in a JSON representation
-  public
+  # @deprecated @see Issuetype#new_ticket_hash does the same now
   def jirahash
-    h = Hash.new
-    issuetype = {"issuetype" => {"name" => @issuetype}}
-    project = {"key" => @project}
-    fields = Hash.new
-    fields["project"] = project
-    # here we need to enter the relevant fields and their values
-    @issuefields.each { |key,value|
-      if key !=  "project" then
-        id = value["id"]
-        if ! value["value"].nil? then
-          fields[id] = value["value"]
-        end
-      end
-    }
-    fields = fields.merge!(issuetype)
-    h = {"fields" => fields}
-    return h
+    return @issue.new_ticket_hash
   end
 
-  # check if the value is allowed for this field
-  # @param [String] key Name of the field
-  # @param [String] value Value to be checked
-  # @return [Boolean, Jirarest2::ValueNotAllowedException]
-  protected
-  def value_allowed?(key,value)
-    if @issuefields[key]["allowedValues"].include?(value) 
-      return true
-    else
-#      puts "Value #{value} not allowed for field #{key}."
-      raise Jirarest2::ValueNotAllowedException.new(key, @issuefields[key]["allowedValues"]), value
-    end
-  end
-
-
-  # Special setter for fields that have a limited numer of allowed values.
-  #
-  # This setter might be included in set_field at a later date.
-  # @param [String] key Name of the field
-  # @param [String] value Value to be checked
-  def set_allowed_value(key,value)
-    if @issuefields[key]["type"] == "array" && value.instance_of?(Array)  then
-      array = Array.new
-      value.each {|item|
-        if value_allowed?(key,item) then
-          array << {@issuefields[key]["allowedValuesIdentifier"] => item}
-        end
-      }
-      @issuefields[key]["value"] = array
-    else
-      if value_allowed?(key,value) then
-        @issuefields[key]["value"] = {@issuefields[key]["allowedValuesIdentifier"] => value}
-      end
-    end
-  end
-
-
-  # TODO We are not yet able to work with "Cascading Select" fields ( "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect")
   # @param [String] key Name of the field
   # @param [String] value Value the field should be set to, this is either a String or an Array (don't know if numbers work too)
-  public
+  # @raise [Jirarest2::WrongFieldnameException] Raised if the name of the field is not found
+  # @todo check if the allowed Values are working now too and if they might throw an exception
   def set_field(key, value)
-    if  @issuefields.include?(key) then
-      if @issuefields[key].include?("allowedValues") then
-        set_allowed_value(key,value)
-      else
-        @issuefields[key]["value"] = value
-      end
-    else
-      raise Jirarest2::WrongFieldnameException, key
-      puts "Unknown Field: #{key}"
-    end
+    @issue.set_value(key,value,:name)
   end
 
   # @param [String] field Name of the field
   # @return [String] value of the field
   def get_field(field)
-    @issuefields[field]["value"]
+    @issue.get_value(field,:name)
   end
 
   # persitence of this Issue object instance
   # @param [Connection] connection
   # @return [Jirarest2::Result]
   def persist(connection)
-    get_requireds.each { |fieldname| 
-      if @issuefields[fieldname]["value"].nil? then
-        raise Jirarest2::RequiredFieldNotSetException, fieldname
-      end
-    }
-    hash = jirahash
+    hash = @issue.new_ticket_hash
     ret = connection.execute("Post","issue/",hash) 
     if ret.code == "201" then # Ticket sucessfully created
       @issuekey = ret.result["key"]
     end
     return ret
   end
-
-
 
   # Set the watchers for this Ticket
   # @param [Connection] connection
@@ -243,5 +105,11 @@ class NewIssue
     return success
   end
 
+  # Return the fieldtype (Multitype as "array" nostly for backwards compability)
+  # @attr [String] fieldname The Name of the field
+  # @return [String] The fieldtype as String. MultiField types and CascadingField are returned as "array"
+  def fieldtype(fieldname)
+    return @issue.fieldtype(fieldname)
+  end
   
 end # class

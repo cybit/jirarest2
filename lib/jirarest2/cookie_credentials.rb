@@ -25,9 +25,12 @@ require "pstore"
 class CookieCredentials < Credentials
 
   # Location of the file the cookie is persited on a harddrive. Default is "~/.jirarest2.cookie
+  # @return [String] Location of the cookie on the harddrive
   attr_accessor :cookiestore
+  attr_reader :autosave
 
-  # @param [String] url URL to JIRA(tm) instance
+  # @param [String] connecturl URL to JIRA(tm) instance
+  # @param [String] username Username to connect to the server
   # @param [Boolean] autosave Save the cookie on the harddisk whenever something happens?
   def initialize(connecturl, username, autosave = false )
     super(connecturl,username)

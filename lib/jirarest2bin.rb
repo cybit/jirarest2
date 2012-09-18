@@ -23,7 +23,7 @@ require "ostruct"
 require "jirarest2/madbitconfig"
 require "uri"
 
-
+# Module to keep some methods most executable scripts need
 module Jirarest2Bin
   # Checks for the minimum jira version (1.9.1)
   def self.check_ruby_version
@@ -156,7 +156,7 @@ module Jirarest2Bin
   # @param [Array] scriptopts Command line options from the calling script
   # @param [Connection,Nil] connection a connection we er to use
   # @param [Symbol] command to execute
-  # @param [Array] *args Arguments for the commands to call
+  # @param [Array] args Arguments for the commands to call
   # @return [Connection] The connection we used
   # @return [Object] The object that was called in the command
   # @example get a Connection object

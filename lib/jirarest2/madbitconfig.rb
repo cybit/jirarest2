@@ -30,8 +30,9 @@ require "json"
   # The config file can either contain key = value pairs or JSON data
   # JSON and simple "key = value\n" lines work 
   # TODO make it work with "key = [value,value]\n" or even "key = value1 \n value2 \n ..."
-  # @param [String] configfile
+  # @param [String] config_file
   # @param [Boolean] whitespace Keep whitespace characters? 
+  # @raise [IOError] Raised if the file indicated by config_file is not found
   # @return [Hash] Hash configparameters
   def self.read_configfile(config_file,whitespace = false)
     if whitespace then    
@@ -82,6 +83,7 @@ require "json"
   # @param [String] config_file Name (and path) of the config file
   # @param [Hash] configoptions Hash of "option" => "value" pairs
   # @param [Symbol] save Determines if an existing file is to be kept. :force replaces an existing file
+  # @raise [FileExistsException] Raised if the file that is to be written already exists and the overwrite flag (save) is not set to :force
   def self.write_configfile(config_file, configoptions, save = :noforce)
     config_file = File.expand_path(config_file) # Be save
     

@@ -29,6 +29,8 @@ class Credentials
   attr_reader :baseurl
 
   # @param [String] url URL to JIRA(tm) instance
+  # @param [String] username Username of the user who connects to jira
+  # @raise [Jirarest2::NotAnURLError] Raised if the given URL is not recogniced as an url
   def initialize(url,username)
     uri = URI(url)
     if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then
@@ -40,8 +42,9 @@ class Credentials
     end
   end
 
-  # Throws an Jirarest2::NotAnURLError if the given String is not an URI.
+  # Set the connect url a later date in the life of the instance
   # @param [String] url
+  # @raise [Jirarest2::NotAnURLError] Raised if the given URL is not recogniced as an url
   def connecturl=(url)
     uri = URI(url)
     if uri.instance_of?(URI::HTTP) || uri.instance_of?(URI::HTTPS) then

@@ -14,7 +14,9 @@ lib/jirarest2/connect.rb
 lib/jirarest2/cookie_credentials.rb
 lib/jirarest2/credentials.rb
 lib/jirarest2/exceptions.rb
+lib/jirarest2/field.rb
 lib/jirarest2/issue.rb
+lib/jirarest2/issuetype.rb
 lib/jirarest2/madbitconfig.rb
 lib/jirarest2/newissue.rb
 lib/jirarest2/password_credentials.rb
@@ -26,6 +28,7 @@ lib/jirarest2/services/issuelinktype.rb
 lib/jirarest2/services/watcher.rb
 lib/jirarest2bin.rb
 test/data/cookiejar
+test/data/createmeta
 test/data/get-comments.txt
 test/data/issuespec.txt
 test/data/test.config.data
@@ -37,9 +40,12 @@ test/test_comment.rb
 test/test_connect.rb
 test/test_cookie_credentials.rb
 test/test_credentials.rb
+test/test_fieldcreatemeta.rb
+test/test_fields.rb
 test/test_issue.rb
 test/test_issuelink.rb
 test/test_issuelinktype.rb
+test/test_issuetype.rb
 test/test_madbitconfig.rb
 test/test_newissue.rb
 test/test_password_credentials.rb

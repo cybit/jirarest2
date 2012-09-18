@@ -58,6 +58,7 @@ class IssueLink < Services
   # @param [String, Issue] remoteIssue Issue to connect to
   # @param [String] type Link type
   # @param [String] comment If a comment should be set while linking
+  # @raise [Jirarest2::ValueNotAllowedException.new] Raised if the name give for the linktype is not valid
   # @return [Jirarest2::Result] The result of the linking
   def link_issue(thisIssue,remoteIssue,type,comment = nil)
     inwardIssue = key(thisIssue)
