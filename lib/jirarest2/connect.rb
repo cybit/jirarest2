@@ -120,7 +120,7 @@ class Connect
   # @return [Boolean] 
   def check_uri
     begin
-      ret = (execute("Get","dashboard","").code == "200")
+      return execute("Get","dashboard","").code == "200"
       # TODO is the 404 really possible?
     rescue Jirarest2::NotFoundError 
       return false
@@ -166,7 +166,7 @@ class Connect
  # @return [Boolean] true if the authentication seems to be valid (actually it checks if there is a session)
  def verify_auth
    ret =   execute("Get","auth/latest/session","") 
-   store_cookiejar if @credentials.instance_of?(CookieCredentials) && @credentials.autosave
+   @credentials.store_cookiejar if @credentials.instance_of?(CookieCredentials) && @credentials.autosave
    return ret.code == "200" 
  end
 

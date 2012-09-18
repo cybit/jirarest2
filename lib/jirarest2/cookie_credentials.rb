@@ -25,7 +25,9 @@ require "pstore"
 class CookieCredentials < Credentials
 
   # Location of the file the cookie is persited on a harddrive. Default is "~/.jirarest2.cookie
+  # @return [String] Location of the cookie on the harddrive
   attr_accessor :cookiestore
+  attr_reader :autosave
 
   # @param [String] connecturl URL to JIRA(tm) instance
   # @param [String] username Username to connect to the server

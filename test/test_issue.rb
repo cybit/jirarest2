@@ -19,9 +19,10 @@ class TestIssue < MiniTest::Unit::TestCase
   
   def test_receive
     issue = Issue.new("SP-2")
-    WebMock.disable!
-#    pp issue.receive(@con)
-    WebMock.enable!
+# @todo write tests
+#    WebMock.disable!
+#    ppp issue.receive(@con)
+#    WebMock.enable!
   end
 
   def test_set_assignee_no_rights

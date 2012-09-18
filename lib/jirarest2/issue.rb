@@ -27,10 +27,12 @@ class Issue
   end
   
   # Receive an issue and all it's fields from jira
+  # @todo This method does not work yet
   # @param [Connection] connection
   def receive(connection)
     uritail = "issue/#{@issueid}"
     result = connection.execute("Get",uritail,{"expand" => "metadata"}) # get the issue AND the metadata because we already know how to parse that.
+    return result
 # TODO Many and more fields
   end
 

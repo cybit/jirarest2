@@ -21,6 +21,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("summary","Summary",{:required => false})
     field.parse_value("All Fields Bujaa")
     assert_equal "All Fields Bujaa",field.value
+    toj = {"summary" => "All Fields Bujaa"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10307 # URL -> TextField
@@ -37,6 +39,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10307","URL",{:required => false})
     field.parse_value("https://localhost:8080/test/test")
     assert_equal "https://localhost:8080/test/test",field.value
+    toj = {"customfield_10307" => "https://localhost:8080/test/test"}
+    assert_equal toj, field.to_j
   end
 
 
@@ -55,6 +59,7 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field.parse_value({"originalEstimate"=>"46w 3d 6h", "remainingEstimate"=>"1w 3m", "originalEstimateSeconds"=>6732000, "remainingEstimateSeconds"=>144180})
     ret = {"originalEstimate" => "46w 3d 6h", "remainingEstimate" => "1w 3m", "originalEstimateSeconds" => 6732000, "remainingEstimateSeconds" => 144180}
     assert_equal ret,field.value
+# @todo check for to_j
     end
 
 
@@ -73,6 +78,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::VersionField.new("customfield_10306","Single Version Picker Field",{:required => false, :key => "name"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/version/10001", "id"=>"10001", "description"=>"And now v0.2", "name"=>"0.2", "archived"=>false, "released"=>false, "releaseDate"=>"2012-08-01"})
     assert_equal "0.2",field.value
+    toj = {"customfield_10306"=>{"name"=>"0.2"}}
+    assert_equal toj, field.to_j
   end
 
 
@@ -90,6 +97,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10309","Job Switch (Hidden)",{:required => false})
     field.parse_value("false")
     assert_equal "false",field.value
+    toj = {"customfield_10309"=>"false"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10308 # Multi Version Picker -> MultiVersionField
@@ -106,6 +115,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiVersionField.new("customfield_10308","Multi Version Picker",{:required => false, :key => "name"})
     field.parse_value([{"self"=>"http://localhost:2990/jira/rest/api/2/version/10001", "id"=>"10001", "description"=>"And now v0.2", "name"=>"0.2", "archived"=>false, "released"=>false, "releaseDate"=>"2012-08-01"}, {"self"=>"http://localhost:2990/jira/rest/api/2/version/10002", "id"=>"10002", "description"=>"Version 0.3", "name"=>"0.3", "archived"=>false, "released"=>false, "releaseDate"=>"2012-08-31"}])
     assert_equal ["0.2","0.3"],field.value
+    toj = {"customfield_10308" => [{"name" => "0.2"},{"name" => "0.3"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_issuetype # issuetype -> HashField
@@ -124,6 +135,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("issuetype","Issue Type",{:required => false, :key => "name"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/issuetype/1", "id"=>"1", "description"=>"A problem which impairs or prevents the functions of the product.", "iconUrl"=>"http://localhost:2990/jira/images/icons/bug.gif", "name"=>"Bug", "subtask"=>false})
     assert_equal "Bug",field.value
+    toj = {"issuetype" => {"name" => "Bug"} }
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10303 # multigroupPicker -> MultiUserField
@@ -140,6 +153,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiUserField.new("customfield_10303","Multi Group",{:required => false, :key => "name"})
     field.parse_value( [{"name"=>"jira-administrators"}, {"name"=>"jira-users"}])
     assert_equal ["jira-administrators","jira-users"],field.value
+    toj = { "customfield_10303" => [{"name" => "jira-administrators"},{"name" => "jira-users" }]}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10302 # importid -> NumberField
@@ -156,6 +171,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::NumberField.new("customfield_10302","Import ID Field range search",{:required => false})
     field.parse_value(nil)
     assert_equal nil,field.value
+    toj = nil
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10305 # readonlyfield -> TextField
@@ -172,6 +189,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10305","RO Text Field",{:required => false})
     field.parse_value(nil)
     assert_equal nil,field.value
+    toj = nil
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10304 # project -> ProjectField
@@ -189,6 +208,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::ProjectField.new("customfield_10304","Project Picket Field",{:required => false, :key => "key"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/project/MFTP", "id"=>"10000", "key"=>"MFTP", "name"=>"My first Test Project", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/projectavatar?size=small&pid=10000&avatarId=10011", "48x48"=>"http://localhost:2990/jira/secure/projectavatar?pid=10000&avatarId=10011"}})
     assert_equal "MFTP",field.value
+    toj = {"customfield_10304" => {"key" => "MFTP"}}
+    assert_equal toj, field.to_j
   end
 
   def test_resolution # resolution -> HashField
@@ -205,6 +226,9 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("resolution","Resolution",{:required => false, :key => "name"})
     field.parse_value(nil)
     assert_equal nil,field.value
+# @todo see if there is not a better test here
+    toj = nil
+    assert_equal toj, field.to_j
   end
 
   def test_fixVersions # version -> MultiVersionField
@@ -221,6 +245,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiVersionField.new("fixVersions","Fix Version/s",{:required => false, :key => "name"})
     field.parse_value([{"self"=>"http://localhost:2990/jira/rest/api/2/version/10002", "id"=>"10002", "description"=>"Version 0.3", "name"=>"0.3", "archived"=>false, "released"=>false, "releaseDate"=>"2012-08-31"}])
     assert_equal ["0.3"],field.value
+    toj = { "fixVersions" => [{"name" => "0.3"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_reporter # user -> UserField
@@ -237,6 +263,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::UserField.new("reporter","Reporter",{:required => false, :key => "name"})
     field.parse_value( {"self"=>"http://localhost:2990/jira/rest/api/2/user?username=admin", "name"=>"admin", "emailAddress"=>"admin@example.com", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122", "48x48"=>"http://localhost:2990/jira/secure/useravatar?avatarId=10122"}, "displayName"=>"admin", "active"=>true})
     assert_equal "admin",field.value
+    toj = {"reporter" => {"name" => "admin"}}
+    assert_equal toj, field.to_j
   end
 
   def test_description # description -> TextField
@@ -251,8 +279,10 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
   end
   def test_parse_value_description
     field = Jirarest2Field::TextField.new("description","Description",{:required => false})
-    field.parse_value("What do you want me to describe")
-    assert_equal "What do you want me to describe",field.value
+    field.parse_value("What do you want me to describe?")
+    assert_equal "What do you want me to describe?",field.value
+    toj = {"description" => "What do you want me to describe?"}
+    assert_equal toj, field.to_j
   end
 
   def test_priority # priority -> HashField
@@ -269,6 +299,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("priority","Priority",{:required => false, :key => "name"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/priority/4", "iconUrl"=>"http://localhost:2990/jira/images/icons/priority_minor.gif", "name"=>"Minor", "id"=>"4"})
     assert_equal "Minor",field.value
+    toj = {"priority"=>{"name"=>"Minor"}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10001 # datetime -> DateTimeField
@@ -285,6 +317,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::DateTimeField.new("customfield_10001","Date Time Field",{:required => false})
     field.parse_value("2012-08-22T19:08:00.000+0200")
     assert_equal DateTime.parse("2012-08-22T19:08:00.000+0200"),field.value(true)
+    toj = {"customfield_10001"=>"2012-08-22T19:08:00.000+0200"}
+    assert_equal toj, field.to_j
   end
 
   def test_duedate # date -> DateField
@@ -301,6 +335,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::DateField.new("duedate","Due Date",{:required => false})
     field.parse_value("2012-08-29")
     assert_equal Date.parse("2012-08-29"),field.value(true)
+    toj = {"duedate"=>"2012-08-29"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10002 # datepicker -> DateField
@@ -317,6 +353,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::DateField.new("customfield_10002","Date Picker",{:required => false})
     field.parse_value("2012-08-14")
     assert_equal Date.parse("2012-08-14"),field.value(true)
+    toj = {"customfield_10002"=>"2012-08-14"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10310 # jobcheckbox -> TextField
@@ -333,6 +371,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10310","Job Checkbox",{:required => false})
     field.parse_value("false")
     assert_equal "false",field.value
+    toj = {"customfield_10310"=>"false"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10003 # textarea -> TextField
@@ -345,10 +385,12 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     assert_raises(NoMethodError) { field.key }
     assert_equal allowed_v, field.allowed_values
   end
-  def test_parse_value
+  def test_parse_value_customfield_10003
     field = Jirarest2Field::TextField.new("customfield_10003","Großes Text",{:required => false})
     field.parse_value("Big Text?")
     assert_equal "Big Text?",field.value
+    toj = {"customfield_10003"=>"Big Text?"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10311 # float -> NumberField
@@ -365,6 +407,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::NumberField.new("customfield_10311","Numbers no",{:required => false})
     field.parse_value(14.0)
     assert_equal 14.0,field.value
+    toj = {"customfield_10311"=>14.0}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10004 # multicheckboxes -> MultiHashField
@@ -382,6 +426,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiHashField.new("customfield_10004","Multi Checkboxes",{:required => false, :key => "value"})
     field.parse_value([{"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10021", "value"=>"Heine", "id"=>"10021"}, {"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10019", "value"=>"Göthe", "id"=>"10019"}])
     assert_equal ["Heine","Göthe"],field.value
+    toj = {"customfield_10004" => [{"value" => "Heine"},{"value" => "Göthe"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10312 # float -> NumberField
@@ -398,6 +444,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::NumberField.new("customfield_10312","Numbers range",{:required => false})
     field.parse_value(23.0)
     assert_equal 23.0,field.value
+    toj = {"customfield_10312"=>23.0}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10000 # cascadingselect -> CascadingField
@@ -414,6 +462,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::CascadingField.new("customfield_10000","Cascading Select Test",{:required => false})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10000", "value"=>"English", "id"=>"10000", "child"=>{"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10003", "value"=>"One", "id"=>"10003"}})
     assert_equal ["English","One"],field.value
+    toj = {"customfield_10000"=>{"value"=>"English", "child"=>{"value"=>"One"}}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10102 # textfield -> TextField
@@ -430,6 +480,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10102","projects",{:required => false})
     field.parse_value("Muhahahaha")
     assert_equal "Muhahahaha",field.value
+    toj = {"customfield_10102"=>"Muhahahaha"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10101 # textfield -> TextField
@@ -446,6 +498,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10101","Issue Type",{:required => false})
     field.parse_value("Works")
     assert_equal "Works",field.value
+    toj = {"customfield_10101"=>"Works"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10100 # textfield -> TextField
@@ -462,6 +516,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("customfield_10100","issuetype",{:required => false})
     field.parse_value("Works again")
     assert_equal "Works again",field.value
+    toj = {"customfield_10100"=>"Works again"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10006 # select -> HashField
@@ -478,6 +534,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("customfield_10006","List select",{:required => false, :key => "value"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10017", "value"=>"Faust", "id"=>"10017"})
     assert_equal "Faust",field.value
+    toj = {"customfield_10006" => {"value" => "Faust"}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10005 # multiselect -> MultiHashField
@@ -494,6 +552,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiHashField.new("customfield_10005","Multi Select",{:required => false, :key => "value"})
     field.parse_value([{"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10025", "value"=>"Schiller", "id"=>"10025"}, {"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10026", "value"=>"Göthe", "id"=>"10026"}, {"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10024", "value"=>"Kabale und Liebe", "id"=>"10024"}])
     assert_equal ["Schiller","Göthe","Kabale und Liebe"],field.value
+    toj = {"customfield_10005" => [{"value" => "Schiller"},{"value" => "Göthe"},{"value" => "Kabale und Liebe"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_labels # labels -> MultiStringField
@@ -510,6 +570,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiStringField.new("labels","Labels",{:required => false})
     field.parse_value(["We", "do", "don't", "labels", "love", "we?"])
     assert_equal ["We", "do", "don't", "labels", "love", "we?"],field.value
+    toj = {"labels"=>["We", "do", "don't", "labels", "love", "we?"]}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10315 # userPicker -> UserField
@@ -526,6 +588,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::UserField.new("customfield_10315","User Picker User",{:required => false, :key => "name"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/user?username=test", "name"=>"test", "emailAddress"=>"jira-test@madbit.de", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122", "48x48"=>"http://localhost:2990/jira/secure/useravatar?avatarId=10122"}, "displayName"=>"Test User", "active"=>true})
     assert_equal "test",field.value
+    toj = {"customfield_10315" => {"name" => "test"}}
+    assert_equal toj, field.to_j
   end
 
   def test_assignee # assignee -> UserField
@@ -542,6 +606,9 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::UserField.new("assignee","Assignee",{:required => false, :key => "name"})
     field.parse_value(nil)
     assert_equal nil,field.value
+    toj = nil
+    assert_equal toj, field.to_j
+# @todo See if there should not be a check with a value as well
   end
 
   def test_customfield_10316 # userpicker -> UserField
@@ -558,6 +625,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::UserField.new("customfield_10316","User Picker U+G",{:required => false, :key => "name"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/user?username=test", "name"=>"test", "emailAddress"=>"jira-test@madbit.de", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122", "48x48"=>"http://localhost:2990/jira/secure/useravatar?avatarId=10122"}, "displayName"=>"Test User", "active"=>true})
     assert_equal "test",field.value
+    toj = {"customfield_10316" => {"name" => "test"}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10313 # radiobuttons -> HashField
@@ -574,6 +643,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("customfield_10313","Radios",{:required => false, :key => "value"})
     field.parse_value( {"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10102", "value"=>"Newspaper", "id"=>"10102"})
     assert_equal "Newspaper",field.value
+    toj = {"customfield_10313"=>{"value"=>"Newspaper"}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10314 # select -> HashField
@@ -590,6 +661,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::HashField.new("customfield_10314","Select List Multi",{:required => false, :key => "value"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/customFieldOption/10108", "value"=>"Underground", "id"=>"10108"})
     assert_equal "Underground",field.value
+    toj = {"customfield_10314"=>{"value"=>"Underground"}}
+    assert_equal toj, field.to_j
   end
 
   def test_attachment # attachment -> TextField
@@ -606,6 +679,7 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiStringField.new("attachment","Attachment",{:required => false})
     field.parse_value([])
     assert_equal [],field.value
+# @todo test to_j
   end
 
   def test_customfield_10200 #multiuserpicker -> MultiUserField
@@ -622,6 +696,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiUserField.new("customfield_10200","Multi User",{:required => false, :key => "name"})
     field.parse_value( [{"self"=>"http://localhost:2990/jira/rest/api/2/user?username=admin", "name"=>"admin", "emailAddress"=>"admin@example.com", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122", "48x48"=>"http://localhost:2990/jira/secure/useravatar?avatarId=10122"}, "displayName"=>"admin", "active"=>true}, {"self"=>"http://localhost:2990/jira/rest/api/2/user?username=test", "name"=>"test", "emailAddress"=>"jira-test@madbit.de", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/useravatar?size=small&avatarId=10122", "48x48"=>"http://localhost:2990/jira/secure/useravatar?avatarId=10122"}, "displayName"=>"Test User", "active"=>true}])
     assert_equal ["admin","test"],field.value
+    toj = {"customfield_10200" => [{"name" => "admin"},{"name" => "test"}]} 
+    assert_equal toj, field.to_j
   end
 
   def test_project # project -> ProjectField
@@ -639,6 +715,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::ProjectField.new("project","",{:required => false, :key => "key"})
     field.parse_value({"self"=>"http://localhost:2990/jira/rest/api/2/project/MFTP", "id"=>"10000", "key"=>"MFTP", "name"=>"My first Test Project", "avatarUrls"=>{"16x16"=>"http://localhost:2990/jira/secure/projectavatar?size=small&pid=10000&avatarId=10011", "48x48"=>"http://localhost:2990/jira/secure/projectavatar?pid=10000&avatarId=10011"}})
     assert_equal "MFTP",field.value
+    toj = {"project"=>{"key"=>"MFTP"}}
+    assert_equal toj, field.to_j
   end
 
   def test_versions # version -> MultiVersionField
@@ -656,6 +734,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiVersionField.new("versions","Affects Version/s",{:required => false, :key => "name"})
     field.parse_value([{"self"=>"http://localhost:2990/jira/rest/api/2/version/10001", "id"=>"10001", "description"=>"And now v0.2", "name"=>"0.2", "archived"=>false, "released"=>false, "releaseDate"=>"2012-08-01"}])
     assert_equal ["0.2"],field.value
+    toj = { "versions" => [{"name" => "0.2"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_environment #environment -> TextField
@@ -672,6 +752,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::TextField.new("environment","Environment",{:required => false})
     field.parse_value("Environment? Doomed!")
     assert_equal "Environment? Doomed!",field.value
+    toj = {"environment"=>"Environment? Doomed!"}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10300 # grouppicker -> UserField
@@ -688,6 +770,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::UserField.new("customfield_10300","Pick Group",{:required => false, :key => "name"})
     field.parse_value({"name"=>"jira-developers"})
     assert_equal "jira-developers",field.value
+    toj = {"customfield_10300"=>{"name"=>"jira-developers"}}
+    assert_equal toj, field.to_j
   end
 
   def test_customfield_10301 # importid -> NumberField
@@ -704,6 +788,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::NumberField.new("customfield_10301","Import ID Field no search",{:required => false})
     field.parse_value(nil)
     assert_equal nil,field.value
+    toj = nil
+    assert_equal toj, field.to_j
   end
 
   def test_components # components -> MultiHashField
@@ -720,6 +806,8 @@ class TestFieldCreatemeta < MiniTest::Unit::TestCase
     field = Jirarest2Field::MultiHashField.new("components","Component/s",{:required => false, :key => "name"})
     field.parse_value( [{"self"=>"http://localhost:2990/jira/rest/api/2/component/10001", "id"=>"10001", "name"=>"Sissi", "description"=>"Another Component"}])
     assert_equal ["Sissi"],field.value
+    toj = {"components" => [{"name" => "Sissi"}]}
+    assert_equal toj, field.to_j
   end
 
   def test_allowedValues_empty

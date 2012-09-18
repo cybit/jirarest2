@@ -5,13 +5,18 @@ require "deb"
 module Jirarest2Field
   class TestField < MiniTest::Unit::TestCase
     def setup
+      @fieldid ||= nil # Set to nil if not already set (avoid warnings)
       @fieldid = "FieldID" if @fieldid.nil?
+      @fieldname ||= nil # Set to nil if not already set
       @fieldname = "Fieldname" if @fieldname.nil?
+      @fieldargs ||= nil # Set to nil if not already set (avoid warnings)
       @fieldargs = Hash.new if @fieldargs.nil?
+      @fieldrequired ||= nil # Set to nil if not already set (avoid warnings)
       if @fieldrequired.nil? then
         @fieldrequired = false
       end
       @fieldargs[:required] = @fieldrequired
+      @fieldtype ||= nil # Set to nil if not already set (avoid warnings)
       @fieldtype = "Field"  if @fieldtype.nil?
       @field = eval(@fieldtype).new(@fieldid,@fieldname,@fieldargs) 
     end
@@ -107,7 +112,7 @@ module Jirarest2Field
       ret = nil
       assert_equal ret,@field.to_j
       @field.value = "2011-01-31 15:25:34"
-      ret = {"customfield_10001" => "2011-01-31T15:25:34+00:00"}
+      ret = {"customfield_10001" => "2011-01-31T15:25:34.000+0000"}
       assert_equal ret,@field.to_j
     end
   end # class TestDateTimeField

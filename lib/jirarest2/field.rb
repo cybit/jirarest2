@@ -103,6 +103,7 @@ module Jirarest2Field
     #Interpret the result of createmeta for one field
     # If there is only one value allowed this value will be set
     # @attr [Hash] structure  The JSON result for one field
+    # @todo change @allowed_values here. -> suggestion has to go to and build the correct type
     def createmeta(structure)
       @readonly = true if structure["operations"] == []
       if structure["allowedValues"] then
@@ -183,11 +184,11 @@ protected
     
     # Representation to be used for json and jira
     # @return [Hash]
-    def to_j
-      if @value.nil? then
+    def to_j(value = @value)
+      if value.nil? then
         super(nil)
       else
-        super(@value.to_s)
+        super(value.to_s)
       end
     end
 
@@ -227,8 +228,18 @@ protected
       super
       @value = DateTime.parse(jvalue)
     end
-
-#TODO See if Jira behaves as it should. If not the output format has to be forced to YYYY-MM-DDThh:mm:ss.sTZD 
+    
+    # Representation to be used for json and JIRA(tm)
+    # JIRA(tm) expects certain format which we try to accomodate here
+    # @return [Hash]
+    def to_j(value = @value)
+      if value.nil? then
+        super(nil)
+      else
+        strvalue = value.strftime("%FT%T.%L%z")
+        super(strvalue)
+      end
+    end
   end #class DateTimeField
 
   # A field representing Numbers (not Strings with Numbers)
@@ -258,6 +269,7 @@ protected
     #   (key should be one of "id", "key", "name", "value" )
     # @raise [Jirarest2::HashKeyMissingException] If the key determining the base value of this field in it's hash is not given.
     def initialize(id,name,args)
+      @key ||= nil # Trying to initialize without overwriting something that might come from the subclass
       @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
       raise Jirarest2::HashKeyMissingException, "HashTypes like in #{id} alway require a key!" if @key.nil? 
@@ -495,6 +507,7 @@ protected
     # @todo Test to not really work for to_j
     # @todo Hash_identifier is not alway "name", we should have some "value" fields as well. Whole thing needs to be rewritten work with HashFields as parts
     def initialize(id,name,args)
+      @key ||= nil # Trying to initialize without overwriting something that might come from the subclass
       @key = args[:key].downcase  if ( ! args[:createmeta] && args[:key])
       super
       raise Jirarest2::HashKeyMissingException, "HashTypes like in #{id} always require a key!" if @key.nil? 
@@ -523,7 +536,7 @@ protected
           }
         else 
           value.each{ |field|
-            f = HashField.new("10000a",field,{:createmeta => {"operations" => ["set"], "allowedValues" => [{"name" => field}] } })
+            f = HashField.new("10000a",field,{:createmeta => {"operations" => ["set"], "allowedValues" => [{@key => field}] } })
             fields << f.to_j_inner
           }
         end
