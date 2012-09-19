@@ -15,6 +15,7 @@
 #
 
 require_relative "field"
+require_relative "exceptions"
 
 # Keep track of one Issuetype
 class Issuetype
