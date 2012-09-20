@@ -418,6 +418,7 @@ protected
   end # class MultiField
 
   # The class to represent CascadingSelectFields
+  # @todo error message is more than just a bit misleading
   class CascadingField < Field
     # The key element for the answers - It should not be needed - but it's easer on the checks if it's exposed
     # @return [String] The key element for the way to Jira
@@ -434,6 +435,10 @@ protected
     # @return [Boolean] true if the value is allowed, false if not
     def value_allowed?(value)
       return true if @allowed_values == []  # If there is no list get out of here fast
+      # Special case to ensure that we can use the string "nil" if the is really an allowed value
+      if value[1] == "nil" && ( @allowed_values[0].has_key?(value[0]) && @allowed_values[0][value[0]] == [nil] ) then
+        value[1] = nil
+      end
       if @allowed_values[0].has_key?(value[0]) && @allowed_values[0][value[0]].include?(value[1]) then
         return true
       else
@@ -449,7 +454,7 @@ protected
       if ! content.instance_of?(Array) or content.size != 2 then
         raise Jirarest2::ValueNotAllowedException.new(@name,"Array"), "needs to be an Array with exactly 2 parameters. Was #{content.class}." 
       end
-      super
+      super(content)
     end
     
 
@@ -460,7 +465,11 @@ protected
       if @value.nil? then
         super(nil)
       else
-        super({"value" => @value[0], "child" => {"value" => @value[1]}})
+        if @value[1].nil? then
+          super({"value" => @value[0]}) # If there is no child the server prefers not to be bothered
+        else
+          super({"value" => @value[0], "child" => {"value" => @value[1]}})
+        end
       end
     end
 
@@ -473,18 +482,23 @@ protected
     
     #Interpret the result of createmeta for one field
     # @attr [Hash](structure)
-    # @note fills allowed_values with a straight list of allowed values
-    # @todo Nothing is done here yet!
+    # @note fills allowed_values with a straight list of allowed values. 
+    # @todo The implementation is awkward with only one element in the array and the fields as Hashes in element 0. See if this is should be rewritten.
     def createmeta(structure)
       @readonly = true if structure["operations"] == []
       @key = "value"
       if structure["allowedValues"] then
+        @allowed_values << Hash.new
         structure["allowedValues"].each{ |suggestion|
           subentries = Array.new
-          suggestion["children"].each{ |entry|
-            subentries << entry["value"]
-          }
-          @allowed_values << {suggestion[@key] => subentries}
+          if suggestion.has_key?("children") then
+            suggestion["children"].each{ |entry|
+              subentries << entry["value"]
+            }
+          else
+            subentries << nil
+          end
+          @allowed_values[0][suggestion[@key]] = subentries
         }
       end
     end

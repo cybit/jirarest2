@@ -346,13 +346,20 @@ module Jirarest2Field
     end
     
     def test_allowed 
-      @field.allowed_values= [{ "color" => ["red","green","yellow"],"car" => ["bmw","mini","mg","vw"], "lang" => ["ruby","Java","C","C#"]}]
+      @field.allowed_values= [{ "color" => ["red","green","yellow"],"car" => ["bmw","mini","mg","vw"],"lang" => ["ruby","Java","C","C#"]}]
       @field.value = ["color","red"]
+      assert_equal ["color","red"],@field.value
       @field.value = ["car","mg"]
+      assert_equal ["car","mg"],@field.value
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["color","lang"] }
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["color"] }
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["music"] }
       assert_raises(Jirarest2::ValueNotAllowedException) { @field.value = ["music","Cello"] }
+    end
+
+    def test_allowed_with_empties
+      @field.allowed_values = [{ "color" => ["red","green","yellow"],"car" => [nil],"lang" => ["ruby","Java","C","C#"]}]
+      @field.value = ["car","nil"]
     end
     
   end # class TestCascadingField

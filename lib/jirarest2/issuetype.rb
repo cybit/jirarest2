@@ -29,6 +29,7 @@ class Issuetype
   attr_reader :required_fields
   
   #Get the correct Fieldtype based on the schema from createmeta
+  # Strings are a little bit strange as the representation differs - some just go as values others go as hashes
   # @attr [Hash] schema The type description we get
   # @return [String] Name of the Fieldtype to use
   # @todo timetracking will probably not work
@@ -83,36 +84,25 @@ class Issuetype
         when /.*:cascadingselect$/
           return "CascadingField"
         else
-          raise Jirarest2::CouldNotDetermineFieldtypeException schema
+          raise Jirarest2::CouldNotDetermineFieldtypeException, schema
         end
       else
-        raise Jirarest2::CouldNotDetermineFieldtypeException schema
+        raise Jirarest2::CouldNotDetermineFieldtypeException, schema
       end
     when "string"
+      # Strings should be easy but unfortunately there are some strings that result in hashes
       return "TextField" if schema["system"]
-      schema["custom"] =~ /.*:(\w*)$/
+      schema["custom"] =~ /.*:(\w*)$/ 
       case $1
-      when "url"
-        return "TextField"
-      when "textfield"
-        return "TextField"
-      when "textarea"
-        return "TextField"
       when "radiobuttons"
         return "HashField"
       when "select"
         return "HashField"
-      when "hiddenjobswitch"
-        return "TextField"
-      when "readonlyfield"
-        return "TextField"
-      when "jobcheckbox"
-        return "TextField"
       else 
-        raise Jirarest2::CouldNotDetermineFieldtypeException schema
+        return "TextField"
       end
     else
-      raise Jirarest2::CouldNotDetermineFieldtypeException schema
+      raise Jirarest2::CouldNotDetermineFieldtypeException, schema
     end
 
   end # def decipher_schema
@@ -157,7 +147,7 @@ class Issuetype
         createmeta(json["editmeta"])
       else
         # We need to know what to fill and how
-        raise Jirearesr2::FieldsUnknownError json["self"]
+        raise Jirearesr2::FieldsUnknownError, json["self"]
       end
     end
     @issuekey = json["key"]
@@ -210,6 +200,10 @@ class Issuetype
       @fields.each { |id,field| 
         fields = fields.merge!(field.to_j) if ! field.to_j.nil? #Sending empty fields with a new ticket will not work
       }
+      # Work out some difference between different versions of JIRA(tm). Sometimes the issuetype is there as a field sometimes it isn't.
+      if !fields.has_key?("issuetype") then
+        fields["issuetype"] = {"name" => @name}
+      end
       h = {"fields" => fields}
       return h
     else
