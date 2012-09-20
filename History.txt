@@ -1,3 +1,11 @@
+=== 0.0.15 / 2012-09-21
+
+* 3 bug fixes:
+
+  * Changed the behaviour regarding custom fieldtypes with type "string". Those are now a TextField by default and only radiobuttons and select are named as exceptions
+  * Fixed a "bug" with jira versions that don't return the "issuetype" field in the createmeta statement
+  * Fixed the CascadingField type
+
 === 0.0.14 / 2012-09-19
 
 * 1 unknown:

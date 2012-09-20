@@ -18,7 +18,7 @@
 #
 
 # Version Parameter all CAPS
-VERSION = "0.0.14"
+VERSION = "0.0.15"
 # Version Parameter 
 Version = VERSION
 
